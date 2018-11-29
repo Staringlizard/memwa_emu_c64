@@ -1,5 +1,5 @@
 /*
- * memwa2 vic component
+ * memwa emu vic component
  *
  * Copyright (c) 2016 Mathias Edman <mail@dicetec.com>
  *
@@ -52,6 +52,12 @@
 #include "cpu.h"
 #include "tap.h"
 #include "cia.h"
+
+#ifdef _MSC_VER
+#define popcnt __popcnt
+#else
+#define popcnt __builtin_popcount
+#endif
 
 #define NO_OF_FRAMES_STATS      50
 #define NO_OF_FRAMES_LOCK       2
@@ -2702,7 +2708,7 @@ GO_AGAIN:
             refresh_sprites();
 
             /* Vic will steal 2 cycles for every sprite on this row */
-            g_ucycles_in_queue += __builtin_popcount(g_sprite_presence_a[g_screen_line_cnt]) * UCYCLE_BAD_SPRITE;
+            g_ucycles_in_queue += popcnt(g_sprite_presence_a[g_screen_line_cnt]) * UCYCLE_BAD_SPRITE;
           }
           else
           {

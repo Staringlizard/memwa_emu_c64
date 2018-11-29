@@ -1,5 +1,5 @@
 /*
- * memwa2 keyboard component
+ * memwa emu keyboard component
  *
  * Copyright (c) 2016 Mathias Edman <mail@dicetec.com>
  *

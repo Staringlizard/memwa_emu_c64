@@ -1,5 +1,5 @@
 /*
- * memwa2 host-emulator interface
+ * memwa emu host-emulator interface
  *
  * Copyright (c) 2016 Mathias Edman <mail@dicetec.com>
  *

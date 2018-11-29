@@ -1,5 +1,5 @@
 /*
- * memwa2 emulator bus
+ * memwa emu bus
  *
  * Copyright (c) 2016 Mathias Edman <mail@dicetec.com>
  *

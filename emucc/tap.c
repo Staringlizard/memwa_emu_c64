@@ -1,5 +1,5 @@
 /*
- * memwa2 tape (datasette) component
+ * memwa emu tape (datasette) component
  *
  * Copyright (c) 2016 Mathias Edman <mail@dicetec.com>
  *

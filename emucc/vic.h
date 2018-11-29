@@ -1,5 +1,5 @@
 /*
- * memwa2 vic component
+ * memwa emu vic component
  *
  * Copyright (c) 2016 Mathias Edman <mail@dicetec.com>
  *

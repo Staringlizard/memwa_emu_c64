@@ -1,5 +1,5 @@
 /*
- * memwa2 sid component
+ * memwa emu sid component
  *
  * Copyright (c) 2016 Mathias Edman <mail@dicetec.com>
  *

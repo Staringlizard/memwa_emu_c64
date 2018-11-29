@@ -1,5 +1,5 @@
 /*
- * memwa2 joystick component
+ * memwa emu joystick component
  *
  * Copyright (c) 2016 Mathias Edman <mail@dicetec.com>
  *

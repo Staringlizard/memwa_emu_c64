@@ -1,5 +1,5 @@
 /*
- * memwa2 via component
+ * memwa emu via component
  *
  * Copyright (c) 2016 Mathias Edman <mail@dicetec.com>
  *
