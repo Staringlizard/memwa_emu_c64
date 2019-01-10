@@ -24,6 +24,8 @@
 #ifndef _IF_H
 #define _IF_H
 
+#define IF_VERSION                          "1"
+
 /*********************** EMULATOR CC INTERFACE */
 
 #define IF_MEMORY_CC_RAM_ACTUAL_SIZE        0x10000
@@ -33,30 +35,30 @@
 #define IF_MEMORY_DD_DOS_ACTUAL_SIZE        0x4000
 
 
+#define IF_MEMORY_CC_SCREEN_BUFFER0_SIZE    0x100000
 #define IF_MEMORY_CC_SCREEN_BUFFER1_SIZE    0x100000
 #define IF_MEMORY_CC_SCREEN_BUFFER2_SIZE    0x100000
-#define IF_MEMORY_CC_SCREEN_BUFFER3_SIZE    0x100000
 #define IF_MEMORY_CC_RAM_SIZE               0x10000
 #define IF_MEMORY_CC_KROM_SIZE              0x10000
 #define IF_MEMORY_CC_BROM_SIZE              0x10000
 #define IF_MEMORY_CC_CROM_SIZE              0x10000
 #define IF_MEMORY_CC_IO_SIZE                0x10000
+#define IF_MEMORY_CC_UTIL0_SIZE             0x40000
 #define IF_MEMORY_CC_UTIL1_SIZE             0x40000
-#define IF_MEMORY_CC_UTIL2_SIZE             0x40000
+#define IF_MEMORY_CC_SPRITE0_SIZE           0x40000
 #define IF_MEMORY_CC_SPRITE1_SIZE           0x40000
 #define IF_MEMORY_CC_SPRITE2_SIZE           0x40000
-#define IF_MEMORY_CC_SPRITE3_SIZE           0x40000
 #define IF_MEMORY_CC_STAGE_FILES_SIZE       0x100000
 
 #define IF_MEMORY_DD_ALL_SIZE               0x10000
+#define IF_MEMORY_DD_UTIL0_SIZE             0x40000
 #define IF_MEMORY_DD_UTIL1_SIZE             0x40000
-#define IF_MEMORY_DD_UTIL2_SIZE             0x40000
 
 typedef enum
 {
+    IF_DISPLAY_LAYER_BUFFER0, /* Size = 0x100000 (800x600x2) */
     IF_DISPLAY_LAYER_BUFFER1, /* Size = 0x100000 (800x600x2) */
-    IF_DISPLAY_LAYER_BUFFER2, /* Size = 0x100000 (800x600x2) */
-    IF_DISPLAY_LAYER_BUFFER3 /* Size = 0x100000 (800x600x2) */
+    IF_DISPLAY_LAYER_BUFFER2 /* Size = 0x100000 (800x600x2) */
 } if_display_layer_t;
 
 typedef enum
@@ -109,11 +111,11 @@ typedef enum
     IF_MEM_CC_TYPE_BROM,      /* Size = 0x10000 */
     IF_MEM_CC_TYPE_CROM,      /* Size = 0x10000 */
     IF_MEM_CC_TYPE_IO,        /* Size = 0x10000 */
+    IF_MEM_CC_TYPE_UTIL0,     /* Size = 0x40000 */
     IF_MEM_CC_TYPE_UTIL1,     /* Size = 0x40000 */
-    IF_MEM_CC_TYPE_UTIL2,     /* Size = 0x40000 */
+    IF_MEM_CC_TYPE_SPRITE0,   /* Size = 0x40000 */
     IF_MEM_CC_TYPE_SPRITE1,   /* Size = 0x40000 */
-    IF_MEM_CC_TYPE_SPRITE2,   /* Size = 0x40000 */
-    IF_MEM_CC_TYPE_SPRITE3    /* Size = 0x20000 */
+    IF_MEM_CC_TYPE_SPRITE2    /* Size = 0x20000 */
 } if_mem_cc_type_t;
 
 typedef struct
@@ -138,6 +140,7 @@ typedef void (*if_emu_cc_time_tenth_second_t)();
 typedef void (*if_emu_cc_ports_write_serial_t)(uint8_t data);
 typedef void (*if_emu_cc_display_limit_frame_rate_t)(uint8_t active);
 typedef void (*if_emu_cc_display_lock_frame_rate_t)(uint8_t active);
+typedef void (*if_emu_cc_ver_get_t)(char **ver_pp);
 
 typedef struct
 {
@@ -179,8 +182,13 @@ typedef struct
 
 typedef struct
 {
-    if_emu_cc_ports_write_serial_t if_emu_cc_ports_write_serial_fp;
+    if_emu_cc_ports_write_serial_t ports_write_serial_fp;
 } if_emu_cc_ports_t;
+
+typedef struct
+{
+    if_emu_cc_ver_get_t ver_get_fp;
+} if_emu_cc_ver_t;
 
 /*
  * Emulator cc main interface. These
@@ -196,6 +204,7 @@ typedef struct
     if_emu_cc_tape_drive_t if_emu_cc_tape_drive;
     if_emu_cc_time_t if_emu_cc_time;
     if_emu_cc_ports_t if_emu_cc_ports;
+    if_emu_cc_ver_t if_emu_cc_ver;
 } if_emu_cc_t;
 
 
@@ -206,8 +215,8 @@ typedef struct
 typedef enum
 {
     IF_MEM_DD_TYPE_ALL,       /* Size = 0x10000 */
+    IF_MEM_DD_TYPE_UTIL0,     /* Size = 0x50000 */
     IF_MEM_DD_TYPE_UTIL1,     /* Size = 0x50000 */
-    IF_MEM_DD_TYPE_UTIL2,     /* Size = 0x50000 */
 } if_mem_dd_type_t;
 
 typedef void (*if_emu_dd_mem_set_t)(uint8_t *mem_p, if_mem_dd_type_t if_mem_type);
@@ -216,6 +225,7 @@ typedef void (*if_emu_dd_op_run_t)(uint32_t cycles);
 typedef void (*if_emu_dd_op_reset_t)();
 typedef void (*if_emu_dd_disk_drive_load_t)(uint32_t *fd_p);
 typedef void (*if_emu_dd_ports_write_serial_t)(uint8_t data);
+typedef void (*if_emu_dd_ver_get_t)(char **ver_pp);
 
 typedef struct
 {
@@ -236,8 +246,13 @@ typedef struct
 
 typedef struct
 {
-    if_emu_dd_ports_write_serial_t if_emu_dd_ports_write_serial_fp;
+    if_emu_dd_ports_write_serial_t ports_write_serial_fp;
 } if_emu_dd_ports_t;
+
+typedef struct
+{
+    if_emu_dd_ver_get_t ver_get_fp;
+} if_emu_dd_ver_t;
 
 /*
  * Emulator dd main interface. These
@@ -250,6 +265,7 @@ typedef struct
     if_emu_dd_op_t if_emu_dd_op;
     if_emu_dd_disk_drive_t if_emu_dd_disk_drive;
     if_emu_dd_ports_t if_emu_dd_ports;
+    if_emu_dd_ver_t if_emu_dd_ver;
 } if_emu_dd_t;
 
 
@@ -257,8 +273,8 @@ typedef struct
 
 typedef enum
 {
-    IF_EMU_DEV_CC, /* Commodore Computer (c64) */
-    IF_EMU_DEV_DD, /* Disk Drive (1541) */
+    IF_EMU_DEV_CC, /* Commodore Computer */
+    IF_EMU_DEV_DD, /* Disk Drive */
 } if_emu_dev_t;
 
 typedef enum
@@ -368,5 +384,8 @@ typedef struct
     if_host_disp_t if_host_disp;
     if_host_ee_t if_host_ee;
 } if_host_t;
+
+extern if_emu_cc_t g_if_cc_emu;
+extern if_emu_dd_t g_if_dd_emu;
 
 #endif

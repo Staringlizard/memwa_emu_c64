@@ -3,11 +3,11 @@ CC = arm-none-eabi-gcc
 AR = arm-none-eabi-gcc-ar
 
 # Remove at least flto and add -g when debugging
-EMUCC_CFLAGS = $(ARCH_FLAGS) $(EMUCC_INCLUDE_FILES) -mthumb -g -Wall -ffunction-sections -Ofast -c
-EMUCC_LFLAGS = $(ARCH_FLAGS) --specs=nosys.specs -mthumb  -g  -Wl,-Map=./out_libemucc/libemucc.map,--gc-section
+EMUCC_CFLAGS = $(ARCH_FLAGS) $(EMUCC_INCLUDE_FILES) -mthumb -flto -Wall -ffunction-sections -Ofast -c
+EMUCC_LFLAGS = $(ARCH_FLAGS) --specs=nosys.specs -mthumb -flto -Wl,-Map=./out_libemucc/libemucc.map,--gc-section
 
-EMUDD_CFLAGS = $(ARCH_FLAGS) $(EMUDD_INCLUDE_FILES) -mthumb -g  -Wall -ffunction-sections -Ofast -c
-EMUDD_LFLAGS = $(ARCH_FLAGS) --specs=nosys.specs -mthumb -g   -Wl,-Map=./out_libemudd/libemudd.map,--gc-section
+EMUDD_CFLAGS = $(ARCH_FLAGS) $(EMUDD_INCLUDE_FILES) -mthumb -flto -Wall -ffunction-sections -Ofast -c
+EMUDD_LFLAGS = $(ARCH_FLAGS) --specs=nosys.specs -mthumb -flto -Wl,-Map=./out_libemudd/libemudd.map,--gc-section
 
 EMUCC_INCLUDE_FILES := \
 	-I./if \

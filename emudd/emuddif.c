@@ -33,6 +33,7 @@
 #include "cpu.h"
 #include "if.h"
 #include "fdd.h"
+#include "version.h"
 
 void if_emu_dd_mem_set(uint8_t *mem_p, if_mem_dd_type_t mem_type);
 void if_emu_dd_op_init();
@@ -40,6 +41,7 @@ void if_emu_dd_op_run(int32_t cycles);
 void if_emu_dd_op_reset();
 void if_emu_dd_disk_drive_load(uint32_t *fd_p);
 void if_emu_dd_ports_write_serial(uint8_t data);
+void if_emu_dd_ver_get(char **ver_pp);
 
 static int32_t g_cycle_queue;
 
@@ -58,6 +60,9 @@ if_emu_dd_t g_if_dd_emu =
   },
   {
     if_emu_dd_ports_write_serial
+  },
+  {
+    if_emu_dd_ver_get
   }
 };
 
@@ -66,8 +71,8 @@ void if_emu_dd_mem_set(uint8_t *mem_p, if_mem_dd_type_t mem_type)
   switch(mem_type)
   {
     case IF_MEM_DD_TYPE_ALL:
+    case IF_MEM_DD_TYPE_UTIL0:
     case IF_MEM_DD_TYPE_UTIL1:
-    case IF_MEM_DD_TYPE_UTIL2:
       bus_dd_set_memory(mem_p, (memory_bank_dd_t)mem_type);
       break;
 }
@@ -115,4 +120,9 @@ void if_emu_dd_disk_drive_load(uint32_t *fd_p)
 void if_emu_dd_ports_write_serial(uint8_t data)
 {
   via_serial_port_activity(data);
+}
+
+void if_emu_dd_ver_get(char **ver_pp)
+{
+    *ver_pp = FW_VERSION;
 }

@@ -37,6 +37,7 @@
 #include "cpu.h"
 #include "tap.h"
 #include "sid.h"
+#include "version.h"
 
 void if_emu_cc_ue_joyst(if_joyst_port_t if_joyst_port, if_joyst_action_t if_joyst_action, if_joyst_action_state_t if_action_state);
 void if_emu_cc_ue_keybd(uint8_t *keybd_keys_p, uint8_t max_keys, if_key_state_t key_shift, if_key_state_t key_ctrl);
@@ -53,6 +54,7 @@ void if_emu_cc_tape_drive_play();
 void if_emu_cc_tape_drive_stop();
 void if_emu_cc_time_tenth_second();
 void if_emu_cc_ports_write_serial(uint8_t data);
+void if_emu_cc_ver_get(char **ver_pp);
 
 static int32_t g_cycle_queue;
 
@@ -86,6 +88,9 @@ if_emu_cc_t g_if_cc_emu =
   },
   {
     if_emu_cc_ports_write_serial
+  },
+  {
+    if_emu_cc_ver_get
   }
 };
 
@@ -134,17 +139,17 @@ void if_emu_cc_mem_set(uint8_t *mem_p, if_mem_cc_type_t mem_type)
     case IF_MEM_CC_TYPE_BROM:
     case IF_MEM_CC_TYPE_CROM:
     case IF_MEM_CC_TYPE_IO:
+    case IF_MEM_CC_TYPE_UTIL0:
     case IF_MEM_CC_TYPE_UTIL1:
-    case IF_MEM_CC_TYPE_UTIL2:
       bus_set_memory(mem_p, (memory_bank_t)mem_type);
       break;
-    case IF_MEM_CC_TYPE_SPRITE1:
+    case IF_MEM_CC_TYPE_SPRITE0:
       vic_set_memory(mem_p, VIC_MEM_SPRITE_BACKGROUND);
       break;
-    case IF_MEM_CC_TYPE_SPRITE2:
+    case IF_MEM_CC_TYPE_SPRITE1:
       vic_set_memory(mem_p, VIC_MEM_SPRITE_FORGROUND);
       break;
-    case IF_MEM_CC_TYPE_SPRITE3:
+    case IF_MEM_CC_TYPE_SPRITE2:
       vic_set_memory(mem_p, VIC_MEM_SPRITE_MAP);
       break;
   }
@@ -241,4 +246,9 @@ void if_emu_cc_display_lock_frame_rate(uint8_t active)
     {
         vic_unlock_frame_rate();
     }
+}
+
+void if_emu_cc_ver_get(char **ver_pp)
+{
+    *ver_pp = FW_VERSION;
 }
