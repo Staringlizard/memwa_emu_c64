@@ -37,7 +37,7 @@
 
 void if_emu_dd_mem_set(uint8_t *mem_p, if_mem_dd_type_t mem_type);
 void if_emu_dd_op_init();
-void if_emu_dd_op_run(int32_t cycles);
+void if_emu_dd_op_run(uint32_t cycles);
 void if_emu_dd_op_reset();
 void if_emu_dd_disk_drive_load(uint32_t *fd_p);
 void if_emu_dd_ports_write_serial(uint8_t data);
@@ -89,7 +89,7 @@ void if_emu_dd_op_init()
   cpu_dd_boot();
 }
 
-void if_emu_dd_op_run(int32_t cycles)
+void if_emu_dd_op_run(uint32_t cycles)
 {
   uint32_t cc = 0;
 

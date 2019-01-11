@@ -66,7 +66,7 @@ typedef struct
 extern memory_dd_t g_memory_dd; /* Memory interface */
 extern if_host_t g_if_host; /* Main interface */
 
-static via_t g_via_a[2];
+static via_t g_via_p[2];
 static uint32_t g_cycles_in_queue;
 static uint8_t g_serial_port_input;
 static uint8_t g_serial_port_output;
@@ -263,17 +263,17 @@ static uint8_t via1_event_read_portb(uint16_t addr)
 
 static void via1_event_write_timer_lb(uint16_t addr, uint8_t value)
 {
-  *g_via_a[VIA1].timer_latch_ap[A] &= 0xFF00;
-  *g_via_a[VIA1].timer_latch_ap[A] |= value;
+  *g_via_p[VIA1].timer_latch_ap[A] &= 0xFF00;
+  *g_via_p[VIA1].timer_latch_ap[A] |= value;
 }
 
 static void via1_event_write_timer_hb(uint16_t addr, uint8_t value)
 {
-  *g_via_a[VIA1].timer_latch_ap[A] &= 0x00FF;
-  *g_via_a[VIA1].timer_latch_ap[A] |= value << 8;
+  *g_via_p[VIA1].timer_latch_ap[A] &= 0x00FF;
+  *g_via_p[VIA1].timer_latch_ap[A] |= value << 8;
 
   /* At this time both latches are transfered to counter */
-  *g_via_a[VIA1].timer_ap[A] = *g_via_a[VIA1].timer_latch_ap[A];
+  *g_via_p[VIA1].timer_ap[A] = *g_via_p[VIA1].timer_latch_ap[A];
 
   /* Writing this register will clear timer irq flag */
   g_memory_dd.all_p[REG_VIA1_IRQ_STATUS] &= ~MASK_VIA_IRQ_STATUS_TIMER;
@@ -286,25 +286,25 @@ static void via1_event_write_timer_hb(uint16_t addr, uint8_t value)
 
 static void via1_event_write_timer_latch_ap_lb(uint16_t addr, uint8_t value)
 {
-  *g_via_a[VIA1].timer_latch_ap[A] &= 0xFF00;
-  *g_via_a[VIA1].timer_latch_ap[A] |= value;
+  *g_via_p[VIA1].timer_latch_ap[A] &= 0xFF00;
+  *g_via_p[VIA1].timer_latch_ap[A] |= value;
 }
 
 static void via1_event_write_timer_latch_ap_hb(uint16_t addr, uint8_t value)
 {
-  *g_via_a[VIA1].timer_latch_ap[A] &= 0x00FF;
-  *g_via_a[VIA1].timer_latch_ap[A] |= value << 8;
+  *g_via_p[VIA1].timer_latch_ap[A] &= 0x00FF;
+  *g_via_p[VIA1].timer_latch_ap[A] |= value << 8;
 }
 
 static void via1_event_write_irq_enable(uint16_t addr, uint8_t value)
 {
   if((value & 0x80) == 0x80)  // 1=bits written with 1 will be set
   {
-    g_via_a[VIA1].status_irq_mask_reg |= (value & 0x7F);
+    g_via_p[VIA1].status_irq_mask_reg |= (value & 0x7F);
   }
   else  // 0=bits written with 1 will be cleared
   {
-    g_via_a[VIA1].status_irq_mask_reg &= ~(value & 0x7F);
+    g_via_p[VIA1].status_irq_mask_reg &= ~(value & 0x7F);
   }
 
   /* Check if this change will also affect irq status */
@@ -313,7 +313,7 @@ static void via1_event_write_irq_enable(uint16_t addr, uint8_t value)
     g_memory_dd.all_p[REG_VIA1_IRQ_STATUS] &= ~MASK_VIA_IRQ_STATUS_IRQ_OCCURED; /* Reset bit, i.e no irq */
   }
 
-  g_memory_dd.all_p[addr] = g_via_a[VIA1].status_irq_mask_reg;
+  g_memory_dd.all_p[addr] = g_via_p[VIA1].status_irq_mask_reg;
 }
 
 static void via1_event_write_porta(uint16_t addr, uint8_t value)
@@ -378,17 +378,17 @@ static uint8_t via2_event_read_timer_lb(uint16_t addr)
 
 static void via2_event_write_timer_lb(uint16_t addr, uint8_t value)
 {
-  *g_via_a[VIA2].timer_latch_ap[A] &= 0xFF00;
-  *g_via_a[VIA2].timer_latch_ap[A] |= value;
+  *g_via_p[VIA2].timer_latch_ap[A] &= 0xFF00;
+  *g_via_p[VIA2].timer_latch_ap[A] |= value;
 }
 
 static void via2_event_write_timer_hb(uint16_t addr, uint8_t value)
 {
-  *g_via_a[VIA2].timer_latch_ap[A] &= 0x00FF;
-  *g_via_a[VIA2].timer_latch_ap[A] |= value << 8;
+  *g_via_p[VIA2].timer_latch_ap[A] &= 0x00FF;
+  *g_via_p[VIA2].timer_latch_ap[A] |= value << 8;
 
   /* At this time both latches are transfered to counter */
-  *g_via_a[VIA2].timer_ap[A] = *g_via_a[VIA2].timer_latch_ap[A];
+  *g_via_p[VIA2].timer_ap[A] = *g_via_p[VIA2].timer_latch_ap[A];
 
   /* Writing this register will clear timer irq flag */
   g_memory_dd.all_p[REG_VIA2_IRQ_STATUS] &= ~MASK_VIA_IRQ_STATUS_TIMER;
@@ -401,25 +401,25 @@ static void via2_event_write_timer_hb(uint16_t addr, uint8_t value)
 
 static void via2_event_write_timer_latch_ap_lb(uint16_t addr, uint8_t value)
 {
-  *g_via_a[VIA2].timer_latch_ap[A] &= 0xFF00;
-  *g_via_a[VIA2].timer_latch_ap[A] |= value;
+  *g_via_p[VIA2].timer_latch_ap[A] &= 0xFF00;
+  *g_via_p[VIA2].timer_latch_ap[A] |= value;
 }
 
 static void via2_event_write_timer_latch_ap_hb(uint16_t addr, uint8_t value)
 {
-  *g_via_a[VIA2].timer_latch_ap[A] &= 0x00FF;
-  *g_via_a[VIA2].timer_latch_ap[A] |= value << 8;
+  *g_via_p[VIA2].timer_latch_ap[A] &= 0x00FF;
+  *g_via_p[VIA2].timer_latch_ap[A] |= value << 8;
 }
 
 static void via2_event_write_irq_enable(uint16_t addr, uint8_t value)
 {
   if((value & 0x80) == 0x80)  // 1=bits written with 1 will be set
   {
-    g_via_a[VIA2].status_irq_mask_reg |= (value & 0x7F);
+    g_via_p[VIA2].status_irq_mask_reg |= (value & 0x7F);
   }
   else  // 0=bits written with 1 will be cleared
   {
-    g_via_a[VIA2].status_irq_mask_reg &= ~(value & 0x7F);
+    g_via_p[VIA2].status_irq_mask_reg &= ~(value & 0x7F);
   }
 
   /* Check if this change will also affect irq status */
@@ -428,7 +428,7 @@ static void via2_event_write_irq_enable(uint16_t addr, uint8_t value)
     g_memory_dd.all_p[REG_VIA2_IRQ_STATUS] &= ~MASK_VIA_IRQ_STATUS_IRQ_OCCURED; /* Reset bit, i.e no irq */
   }
 
-  g_memory_dd.all_p[addr] = g_via_a[VIA2].status_irq_mask_reg;
+  g_memory_dd.all_p[addr] = g_via_p[VIA2].status_irq_mask_reg;
 }
 
 static void via2_event_write_porta(uint16_t addr, uint8_t value)
@@ -467,7 +467,7 @@ void via_init()
   uint32_t i; /* via -> 1 and 2 */
   uint32_t j; /* port, timer etc -> A and B */
 
-  memset(g_via_a, 0, sizeof(via_t) * 2);
+  memset(g_via_p, 0, sizeof(via_t) * 2);
 
   g_cycles_in_queue = 0;
 
@@ -475,8 +475,8 @@ void via_init()
   {
     for(j = 0; j < 1; j++)
     {
-      g_via_a[i].timer_ap[j] = (uint16_t *)(g_memory_dd.all_p + via_reg_timer_low[i]);
-      g_via_a[i].timer_latch_ap[j] = (uint16_t *)(g_memory_dd.all_p + via_reg_timer_latch_ap_low[i]);
+      g_via_p[i].timer_ap[j] = (uint16_t *)(g_memory_dd.all_p + via_reg_timer_low[i]);
+      g_via_p[i].timer_latch_ap[j] = (uint16_t *)(g_memory_dd.all_p + via_reg_timer_latch_ap_low[i]);
     }
   }
 
@@ -509,8 +509,8 @@ void via_init()
    * to, set them to random for now.
    */
 
-  *g_via_a[VIA1].timer_ap[A] = g_if_host.if_host_rand.rand_get_fp();
-  *g_via_a[VIA2].timer_ap[A] = g_if_host.if_host_rand.rand_get_fp();
+  *g_via_p[VIA1].timer_ap[A] = g_if_host.if_host_rand.rand_get_fp();
+  *g_via_p[VIA2].timer_ap[A] = g_if_host.if_host_rand.rand_get_fp();
 
   bus_dd_event_write_subscribe(REG_VIA1_TIMER_LOW_BYTE, via1_event_write_timer_lb);
   bus_dd_event_write_subscribe(REG_VIA1_TIMER_HIGH_BYTE, via1_event_write_timer_hb);
@@ -555,17 +555,17 @@ void via_step(uint32_t cc)
       for(j = 0; j < 1; j++)
       {
         /* Will this timer underflow? */
-        if(*g_via_a[i].timer_ap[j] <= MIN_QUEUE_SIZE)
+        if(*g_via_p[i].timer_ap[j] <= MIN_QUEUE_SIZE)
         {
-          *g_via_a[i].timer_ap[j] = 0;
+          *g_via_p[i].timer_ap[j] = 0;
 
-          if((g_via_a[i].status_control_reg[j] & MASK_VIA_AUXILIARY_TIMER_CTRL) == ONE_SHOT_NO_PB7) /* Single shot */
+          if((g_via_p[i].status_control_reg[j] & MASK_VIA_AUXILIARY_TIMER_CTRL) == ONE_SHOT_NO_PB7) /* Single shot */
           {
             /* In one shot mode the interrupt needs to be cleared in order to get another one */
             if((g_memory_dd.all_p[via_reg_int[i]] & MASK_VIA_IRQ_STATUS_TIMER) == 0x00)
             {
               /* Is the interrupt enabled? */
-              if(g_via_a[i].status_irq_mask_reg & via_int_mask[j]) /* Interrupt enable? */
+              if(g_via_p[i].status_irq_mask_reg & via_int_mask[j]) /* Interrupt enable? */
               {
                 /* Set flag about what caused IRQ and raise IRQ */
                 g_memory_dd.all_p[via_reg_int[i]] = via_int_reason_and_msb[j];
@@ -578,12 +578,12 @@ void via_step(uint32_t cc)
             }
 
             /* Timer will continue to decrement in this mode */
-            ;//*g_via_a[i].timer_ap[j] = 0xFFFF;
+            ;//*g_via_p[i].timer_ap[j] = 0xFFFF;
           }
           else /* Contineuous */
           {
             /* Is the interrupt enabled? */
-            if(g_via_a[i].status_irq_mask_reg & via_int_mask[j]) /* Interrupt enable? */
+            if(g_via_p[i].status_irq_mask_reg & via_int_mask[j]) /* Interrupt enable? */
             {
               /* Set flag about what caused IRQ and raise IRQ */
               g_memory_dd.all_p[via_reg_int[i]] = via_int_reason_and_msb[j];
@@ -594,13 +594,13 @@ void via_step(uint32_t cc)
               g_memory_dd.all_p[via_reg_int[i]] = via_int_reason[j];
             }
 
-            *g_via_a[i].timer_ap[j] = *g_via_a[i].timer_latch_ap[j];
+            *g_via_p[i].timer_ap[j] = *g_via_p[i].timer_latch_ap[j];
           }
         }
         else
         {
           /* Counter will continue to decrement. No start/stop exist */
-          *g_via_a[i].timer_ap[j] -= MIN_QUEUE_SIZE;
+          *g_via_p[i].timer_ap[j] -= MIN_QUEUE_SIZE;
         }
       }
     }

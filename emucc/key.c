@@ -63,35 +63,35 @@ typedef struct
 } key_coor_t;
 
 /* Contains matrix of pushed keys */
-uint8_t g_matrix_active_aa[8][8];
+uint8_t g_matrix_active_pp[8][8];
 
-static key_map_t g_key_map_a[256]; /* No scan code is larger than this it seems */
+static key_map_t g_key_map_p[256]; /* No scan code is larger than this it seems */
 
 void key_pressed(uint8_t key, uint8_t shift, uint8_t ctrl)
 {
   if(shift == KEY_PRESS)
   {
-    g_matrix_active_aa[0x7][0x1] = KEY_PRESS;
+    g_matrix_active_pp[0x7][0x1] = KEY_PRESS;
   }
 
   if(ctrl == KEY_PRESS)
   {
-    g_matrix_active_aa[0x2][0x7] = KEY_PRESS;
+    g_matrix_active_pp[0x2][0x7] = KEY_PRESS;
   }
 
-  if(g_key_map_a[key].active)
+  if(g_key_map_p[key].active)
   {
-    if(g_key_map_a[key].matrix_x < 8 && g_key_map_a[key].matrix_y < 8)
+    if(g_key_map_p[key].matrix_x < 8 && g_key_map_p[key].matrix_y < 8)
     {
       /* Normal key */
-      g_matrix_active_aa[g_key_map_a[key].matrix_x][g_key_map_a[key].matrix_y] = KEY_PRESS;
+      g_matrix_active_pp[g_key_map_p[key].matrix_x][g_key_map_p[key].matrix_y] = KEY_PRESS;
     }
     else
     {
       /* Joystick key */
-      if(g_key_map_a[key].matrix_x == 8) /* This means joystick A */
+      if(g_key_map_p[key].matrix_x == 8) /* This means joystick A */
       {
-        switch(g_key_map_a[key].matrix_y)
+        switch(g_key_map_p[key].matrix_y)
         {
         case 0:
           joy_set(JOY_PORT_A, JOY_ACTION_UP, JOY_ACTION_STATE_PRESSED, JOY_ACTION_SOURCE_KEY);
@@ -110,9 +110,9 @@ void key_pressed(uint8_t key, uint8_t shift, uint8_t ctrl)
           break;
         }
       }
-      else if(g_key_map_a[key].matrix_y == 8) /* This means joystick B */
+      else if(g_key_map_p[key].matrix_y == 8) /* This means joystick B */
       {
-        switch(g_key_map_a[key].matrix_x)
+        switch(g_key_map_p[key].matrix_x)
         {
         case 0:
           joy_set(JOY_PORT_B, JOY_ACTION_UP, JOY_ACTION_STATE_PRESSED, JOY_ACTION_SOURCE_KEY);
@@ -137,14 +137,14 @@ void key_pressed(uint8_t key, uint8_t shift, uint8_t ctrl)
 
 void key_clear_keys()
 {
-  memset(g_matrix_active_aa, 0, sizeof(g_matrix_active_aa));
+  memset(g_matrix_active_pp, 0, sizeof(g_matrix_active_pp));
 }
 
 void key_map_insert(uint8_t scan_code, uint8_t matrix_x, uint8_t matrix_y)
 {
-  g_key_map_a[scan_code].matrix_x = matrix_x;
-  g_key_map_a[scan_code].matrix_y = matrix_y;
-  g_key_map_a[scan_code].active = 1;
+  g_key_map_p[scan_code].matrix_x = matrix_x;
+  g_key_map_p[scan_code].matrix_y = matrix_y;
+  g_key_map_p[scan_code].active = 1;
 }
 
 uint8_t key_init()
@@ -152,7 +152,7 @@ uint8_t key_init()
   uint8_t i;
   uint8_t k;
 
-  memset(g_matrix_active_aa, 0x00, sizeof(g_matrix_active_aa));
+  memset(g_matrix_active_pp, 0x00, sizeof(g_matrix_active_pp));
 
   for(i = 0; i < 2; i++)
   {

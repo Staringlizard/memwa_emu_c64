@@ -1,0 +1,24 @@
+# Compiled source #
+###################
+*.o
+
+# Compiled folders #
+###################
+out_libemucc/*.o
+out_libemudd/*.o
+
+# Packages #
+############
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Misc #
+######################
+*.map
+

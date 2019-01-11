@@ -31,14 +31,14 @@
 #include <string.h>
 
 /* First is joystick A and B, second is direction. Contains action status */
-joy_action_state_t g_joy_action_state_aa[2][5] =
+joy_action_state_t g_joy_action_state_pp[2][5] =
 {
   {0, 0, 0, 0, 0},
   {0, 0, 0, 0, 0}
 };
 
 /* First is joystick A and B, second is direction. Contains source for an action */
-static joy_action_source_t g_joy_action_source_aa[2][5] =
+static joy_action_source_t g_joy_action_source_pp[2][5] =
 {
   {0, 0, 0, 0, 0},
   {0, 0, 0, 0, 0}
@@ -52,21 +52,21 @@ void joy_set(joy_port_t joy_port,
   switch(joy_action_source)
   {
     case JOY_ACTION_SOURCE_JOY:
-      g_joy_action_state_aa[joy_port][joy_action] = joy_action_state;
-      g_joy_action_source_aa[joy_port][joy_action] = joy_action_source;
+      g_joy_action_state_pp[joy_port][joy_action] = joy_action_state;
+      g_joy_action_source_pp[joy_port][joy_action] = joy_action_source;
       break;
     case JOY_ACTION_SOURCE_KEY:
       /* If joy is pressed and action was set by the joystick itself... */
-      if(g_joy_action_state_aa[joy_port][joy_action] == JOY_ACTION_STATE_PRESSED &&
-         g_joy_action_source_aa[joy_port][joy_action] == JOY_ACTION_SOURCE_JOY)
+      if(g_joy_action_state_pp[joy_port][joy_action] == JOY_ACTION_STATE_PRESSED &&
+         g_joy_action_source_pp[joy_port][joy_action] == JOY_ACTION_SOURCE_JOY)
       {
         ; /* Then action by keyboard should be ignored */
       }
       else
       {
         /* In any other case it is safe to let keyboard action modify state */
-        g_joy_action_state_aa[joy_port][joy_action] = joy_action_state;
-        g_joy_action_source_aa[joy_port][joy_action] = joy_action_source;
+        g_joy_action_state_pp[joy_port][joy_action] = joy_action_state;
+        g_joy_action_source_pp[joy_port][joy_action] = joy_action_source;
       }
       break;
   }
@@ -82,9 +82,9 @@ void joy_clear(joy_action_source_t joy_action_source)
   {
     for(k = 0; k < 5; k ++)
     {
-      if(g_joy_action_source_aa[i][k] == joy_action_source)
+      if(g_joy_action_source_pp[i][k] == joy_action_source)
       {
-        g_joy_action_state_aa[i][k] = JOY_ACTION_STATE_RELEASED;
+        g_joy_action_state_pp[i][k] = JOY_ACTION_STATE_RELEASED;
       }
     }
   }
@@ -92,6 +92,6 @@ void joy_clear(joy_action_source_t joy_action_source)
 
 uint8_t joy_init()
 {
-  memset(g_joy_action_state_aa, 0x00, sizeof(g_joy_action_state_aa));
+  memset(g_joy_action_state_pp, 0x00, sizeof(g_joy_action_state_pp));
   return 0;
 }

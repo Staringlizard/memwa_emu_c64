@@ -86,15 +86,15 @@ typedef struct
 } cia_t;
 
 /* Contains matrix of pushed keys, key.c is responsible for this memory */
-extern uint8_t g_matrix_active_aa[8][8];
+extern uint8_t g_matrix_active_pp[8][8];
 
 /* Contains matrix of joystick status, key.c is responsible for this memory */
-extern joy_action_state_t g_joy_action_state_aa[2][5];
+extern joy_action_state_t g_joy_action_state_pp[2][5];
 
 extern memory_t g_memory; /* Memory interface */
 extern if_host_t g_if_host; /* Main interface */
 
-static cia_t g_cia_a[2];
+static cia_t g_cia_p[2];
 static uint32_t g_cycles_in_queue;
 static uint8_t g_tenth_second;
 static uint8_t g_seconds;
@@ -220,7 +220,7 @@ static uint8_t eval_cia1_portb()
     for(j = 0; j < 8; j++)
     {
       /* If button pressed and the corresponding bit in port a is unset ... */
-      if(g_matrix_active_aa[i][j] &&
+      if(g_matrix_active_pp[i][j] &&
          !(g_memory.io_p[REG_CIA1_DATA_PORT_A] & (1 << j)))
       {
         /* ... then also unset resulting register bit in portb */
@@ -229,23 +229,23 @@ static uint8_t eval_cia1_portb()
     }
   }
 
-  if(g_joy_action_state_aa[JOY_PORT_A][JOY_ACTION_UP] == JOY_ACTION_STATE_PRESSED)
+  if(g_joy_action_state_pp[JOY_PORT_A][JOY_ACTION_UP] == JOY_ACTION_STATE_PRESSED)
   {
     reg_result &= JOY_A_UP_PORT_VAL;
   }
-  if(g_joy_action_state_aa[JOY_PORT_A][JOY_ACTION_DOWN] == JOY_ACTION_STATE_PRESSED)
+  if(g_joy_action_state_pp[JOY_PORT_A][JOY_ACTION_DOWN] == JOY_ACTION_STATE_PRESSED)
   {
     reg_result &= JOY_A_DOWN_PORT_VAL;
   }
-  if(g_joy_action_state_aa[JOY_PORT_A][JOY_ACTION_RIGHT] == JOY_ACTION_STATE_PRESSED)
+  if(g_joy_action_state_pp[JOY_PORT_A][JOY_ACTION_RIGHT] == JOY_ACTION_STATE_PRESSED)
   {
     reg_result &= JOY_A_RIGHT_PORT_VAL;
   }
-  if(g_joy_action_state_aa[JOY_PORT_A][JOY_ACTION_LEFT] == JOY_ACTION_STATE_PRESSED)
+  if(g_joy_action_state_pp[JOY_PORT_A][JOY_ACTION_LEFT] == JOY_ACTION_STATE_PRESSED)
   {
     reg_result &= JOY_A_LEFT_PORT_VAL;
   }
-  if(g_joy_action_state_aa[JOY_PORT_A][JOY_ACTION_FIRE] == JOY_ACTION_STATE_PRESSED)
+  if(g_joy_action_state_pp[JOY_PORT_A][JOY_ACTION_FIRE] == JOY_ACTION_STATE_PRESSED)
   {
     reg_result &= JOY_A_FIRE_PORT_VAL;
   }
@@ -272,7 +272,7 @@ static uint8_t eval_cia1_porta()
     for(j = 0; j < 8; j++)
     {
       /* If button pressed and the corresponding bit in port a is unset ... */
-      if(g_matrix_active_aa[i][j] &&
+      if(g_matrix_active_pp[i][j] &&
          !(g_memory.io_p[REG_CIA1_DATA_PORT_B] & (1 << j)))
       {
         /* ... then also unset resulting register bit in portb */
@@ -281,23 +281,23 @@ static uint8_t eval_cia1_porta()
     }
   }
 
-  if(g_joy_action_state_aa[JOY_PORT_B][JOY_ACTION_UP] == JOY_ACTION_STATE_PRESSED)
+  if(g_joy_action_state_pp[JOY_PORT_B][JOY_ACTION_UP] == JOY_ACTION_STATE_PRESSED)
   {
     reg_result &= JOY_B_UP_PORT_VAL;
   }
-  if(g_joy_action_state_aa[JOY_PORT_B][JOY_ACTION_DOWN] == JOY_ACTION_STATE_PRESSED)
+  if(g_joy_action_state_pp[JOY_PORT_B][JOY_ACTION_DOWN] == JOY_ACTION_STATE_PRESSED)
   {
     reg_result &= JOY_B_DOWN_PORT_VAL;
   }
-  if(g_joy_action_state_aa[JOY_PORT_B][JOY_ACTION_RIGHT] == JOY_ACTION_STATE_PRESSED)
+  if(g_joy_action_state_pp[JOY_PORT_B][JOY_ACTION_RIGHT] == JOY_ACTION_STATE_PRESSED)
   {
     reg_result &= JOY_B_RIGHT_PORT_VAL;
   }
-  if(g_joy_action_state_aa[JOY_PORT_B][JOY_ACTION_LEFT] == JOY_ACTION_STATE_PRESSED)
+  if(g_joy_action_state_pp[JOY_PORT_B][JOY_ACTION_LEFT] == JOY_ACTION_STATE_PRESSED)
   {
     reg_result &= JOY_B_LEFT_PORT_VAL;
   }
-  if(g_joy_action_state_aa[JOY_PORT_B][JOY_ACTION_FIRE] == JOY_ACTION_STATE_PRESSED)
+  if(g_joy_action_state_pp[JOY_PORT_B][JOY_ACTION_FIRE] == JOY_ACTION_STATE_PRESSED)
   {
     reg_result &= JOY_B_FIRE_PORT_VAL;
   }
@@ -368,10 +368,10 @@ static void cia1_event_write_ctrla(uint16_t addr, uint8_t value)
    */
   if(value & MASK_CIA_CONTROL_FORCE_LOAD_TIMER)
   {
-    *g_cia_a[CIA1].timer[A] = g_cia_a[CIA1].timer_latch[A];
+    *g_cia_p[CIA1].timer[A] = g_cia_p[CIA1].timer_latch[A];
     value &= ~MASK_CIA_CONTROL_FORCE_LOAD_TIMER;
   }
-  g_cia_a[CIA1].status_control_reg[A] = value;
+  g_cia_p[CIA1].status_control_reg[A] = value;
 
   g_memory.io_p[addr] = value;
 }
@@ -385,10 +385,10 @@ static void cia1_event_write_ctrlb(uint16_t addr, uint8_t value)
    */
   if(value & MASK_CIA_CONTROL_FORCE_LOAD_TIMER)
   {
-    *g_cia_a[CIA1].timer[B] = g_cia_a[CIA1].timer_latch[B];
+    *g_cia_p[CIA1].timer[B] = g_cia_p[CIA1].timer_latch[B];
     value &= ~MASK_CIA_CONTROL_FORCE_LOAD_TIMER;
   }
-  g_cia_a[CIA1].status_control_reg[B] = value;
+  g_cia_p[CIA1].status_control_reg[B] = value;
 
   g_memory.io_p[addr] = value;
 }
@@ -397,11 +397,11 @@ static void cia1_event_write_irq_ctrl(uint16_t addr, uint8_t value)
 {
   if((value & 0x80) == 0x80)  /* If MSB set then bits written will be set as normal */
   {
-    g_cia_a[CIA1].status_irq_mask_reg |= (value & 0x7F);
+    g_cia_p[CIA1].status_irq_mask_reg |= (value & 0x7F);
   }
   else  /* If MSB not set then bits written will be reset */
   {
-    g_cia_a[CIA1].status_irq_mask_reg &= ~(value & 0x7F);
+    g_cia_p[CIA1].status_irq_mask_reg &= ~(value & 0x7F);
   }
 
   /* This register is in hw, no memory involved */
@@ -409,39 +409,39 @@ static void cia1_event_write_irq_ctrl(uint16_t addr, uint8_t value)
 
 static void cia1_event_write_timera_hb(uint16_t addr, uint8_t value)
 {
-  g_cia_a[CIA1].timer_latch[A] &= 0x00FF;
-  g_cia_a[CIA1].timer_latch[A] |= value << 8;
-  if((g_cia_a[CIA1].status_control_reg[A] & MASK_CIA_CONTROL_START_STOP_TIMER) == 0x00)
+  g_cia_p[CIA1].timer_latch[A] &= 0x00FF;
+  g_cia_p[CIA1].timer_latch[A] |= value << 8;
+  if((g_cia_p[CIA1].status_control_reg[A] & MASK_CIA_CONTROL_START_STOP_TIMER) == 0x00)
   {
-    *g_cia_a[CIA1].timer[A] = g_cia_a[CIA1].timer_latch[A];
+    *g_cia_p[CIA1].timer[A] = g_cia_p[CIA1].timer_latch[A];
   }
 }
 
 static void cia1_event_write_timera_lb(uint16_t addr, uint8_t value)
 {
-  g_cia_a[CIA1].timer_latch[A] &= 0xFF00;
-  g_cia_a[CIA1].timer_latch[A] |= value;
+  g_cia_p[CIA1].timer_latch[A] &= 0xFF00;
+  g_cia_p[CIA1].timer_latch[A] |= value;
 }
 
 static void cia1_event_write_timerb_hb(uint16_t addr, uint8_t value)
 {
-  g_cia_a[CIA1].timer_latch[B] &= 0x00FF;
-  g_cia_a[CIA1].timer_latch[B] |= value << 8;
-  if((g_cia_a[CIA1].status_control_reg[B] & MASK_CIA_CONTROL_START_STOP_TIMER) == 0x00)
+  g_cia_p[CIA1].timer_latch[B] &= 0x00FF;
+  g_cia_p[CIA1].timer_latch[B] |= value << 8;
+  if((g_cia_p[CIA1].status_control_reg[B] & MASK_CIA_CONTROL_START_STOP_TIMER) == 0x00)
   {
-    *g_cia_a[CIA1].timer[B] = g_cia_a[CIA1].timer_latch[B];
+    *g_cia_p[CIA1].timer[B] = g_cia_p[CIA1].timer_latch[B];
   }
 }
 
 static void cia1_event_write_timerb_lb(uint16_t addr, uint8_t value)
 {
-  g_cia_a[CIA1].timer_latch[B] &= 0xFF00;
-  g_cia_a[CIA1].timer_latch[B] |= value;
+  g_cia_p[CIA1].timer_latch[B] &= 0xFF00;
+  g_cia_p[CIA1].timer_latch[B] |= value;
 }
 
 static void cia1_event_write_tod_tenth(uint16_t addr, uint8_t value)
 {
-  g_cia_a[CIA1].tod_started = 1;
+  g_cia_p[CIA1].tod_started = 1;
 }
 
 static uint8_t cia2_event_read_porta(uint16_t addr)
@@ -514,10 +514,10 @@ static void cia2_event_write_ctrla(uint16_t addr, uint8_t value)
    */
   if(value & MASK_CIA_CONTROL_FORCE_LOAD_TIMER)
   {
-    *g_cia_a[CIA2].timer[A] = g_cia_a[CIA2].timer_latch[A];
+    *g_cia_p[CIA2].timer[A] = g_cia_p[CIA2].timer_latch[A];
     value &= ~MASK_CIA_CONTROL_FORCE_LOAD_TIMER;
   }
-  g_cia_a[CIA2].status_control_reg[A] = value;
+  g_cia_p[CIA2].status_control_reg[A] = value;
 
   g_memory.io_p[addr] = value;
 }
@@ -531,10 +531,10 @@ static void cia2_event_write_ctrlb(uint16_t addr, uint8_t value)
    */
   if(value & MASK_CIA_CONTROL_FORCE_LOAD_TIMER)
   {
-    *g_cia_a[CIA2].timer[B] = g_cia_a[CIA2].timer_latch[B];
+    *g_cia_p[CIA2].timer[B] = g_cia_p[CIA2].timer_latch[B];
     value &= ~MASK_CIA_CONTROL_FORCE_LOAD_TIMER;
   }
-  g_cia_a[CIA2].status_control_reg[B] = value;
+  g_cia_p[CIA2].status_control_reg[B] = value;
 
   g_memory.io_p[addr] = value;
 }
@@ -543,11 +543,11 @@ static void cia2_event_write_irq_ctrl(uint16_t addr, uint8_t value)
 {
   if((value & 0x80) == 0x80) /* 1=bits written with 1 will be set */
   {
-    g_cia_a[CIA2].status_irq_mask_reg |= (value & 0x7F);
+    g_cia_p[CIA2].status_irq_mask_reg |= (value & 0x7F);
   }
   else  /* 0=bits written with 1 will be cleared */
   {
-    g_cia_a[CIA2].status_irq_mask_reg &= ~(value & 0x7F);
+    g_cia_p[CIA2].status_irq_mask_reg &= ~(value & 0x7F);
   }
 
   /* This register is in hw, no memory involved */
@@ -556,42 +556,42 @@ static void cia2_event_write_irq_ctrl(uint16_t addr, uint8_t value)
 static void cia2_event_write_timera_hb(uint16_t addr, uint8_t value)
 {
   /* Latch the value into the timer latch */
-  g_cia_a[CIA2].timer_latch[A] &= 0x00FF;
-  g_cia_a[CIA2].timer_latch[A] |= value << 8;
-  if((g_cia_a[CIA2].status_control_reg[A] & MASK_CIA_CONTROL_START_STOP_TIMER) == 0x00)
+  g_cia_p[CIA2].timer_latch[A] &= 0x00FF;
+  g_cia_p[CIA2].timer_latch[A] |= value << 8;
+  if((g_cia_p[CIA2].status_control_reg[A] & MASK_CIA_CONTROL_START_STOP_TIMER) == 0x00)
   {
-    *g_cia_a[CIA2].timer[A] = g_cia_a[CIA2].timer_latch[A];
+    *g_cia_p[CIA2].timer[A] = g_cia_p[CIA2].timer_latch[A];
   }
 }
 
 static void cia2_event_write_timera_lb(uint16_t addr, uint8_t value)
 {
   /* Latch the value into the timer latch */
-  g_cia_a[CIA2].timer_latch[A] &= 0xFF00;
-  g_cia_a[CIA2].timer_latch[A] |= value;
+  g_cia_p[CIA2].timer_latch[A] &= 0xFF00;
+  g_cia_p[CIA2].timer_latch[A] |= value;
 }
 
 static void cia2_event_write_timerb_hb(uint16_t addr, uint8_t value)
 {
   /* Latch the value into the timer latch */
-  g_cia_a[CIA2].timer_latch[B] &= 0x00FF;
-  g_cia_a[CIA2].timer_latch[B] |= value << 8;
-  if((g_cia_a[CIA2].status_control_reg[B] & MASK_CIA_CONTROL_START_STOP_TIMER) == 0x00)
+  g_cia_p[CIA2].timer_latch[B] &= 0x00FF;
+  g_cia_p[CIA2].timer_latch[B] |= value << 8;
+  if((g_cia_p[CIA2].status_control_reg[B] & MASK_CIA_CONTROL_START_STOP_TIMER) == 0x00)
   {
-    *g_cia_a[CIA2].timer[B] = g_cia_a[CIA2].timer_latch[B];
+    *g_cia_p[CIA2].timer[B] = g_cia_p[CIA2].timer_latch[B];
   }
 }
 
 static void cia2_event_write_timerb_lb(uint16_t addr, uint8_t value)
 {
   /* Latch the value into the timer latch */
-  g_cia_a[CIA2].timer_latch[B] &= 0xFF00;
-  g_cia_a[CIA2].timer_latch[B] |= value;
+  g_cia_p[CIA2].timer_latch[B] &= 0xFF00;
+  g_cia_p[CIA2].timer_latch[B] |= value;
 }
 
 static void cia2_event_write_tod_tenth(uint16_t addr, uint8_t value)
 {
-  g_cia_a[CIA2].tod_started = 1;
+  g_cia_p[CIA2].tod_started = 1;
 }
 
 static uint32_t dec2bcd(uint32_t num)
@@ -611,7 +611,7 @@ void cia_init()
   uint32_t i; /* cia 1 and 2 */
   uint32_t j; /* timer A and B */
 
-  memset(g_cia_a, 0, sizeof(cia_t) * 2);
+  memset(g_cia_p, 0, sizeof(cia_t) * 2);
 
   g_cycles_in_queue = 0;
 
@@ -619,7 +619,7 @@ void cia_init()
   {
     for(j = 0; j < 2; j++)
     {
-      g_cia_a[i].timer[j] = (uint16_t *)(g_memory.io_p + cia_reg_timer_low[i][j]);
+      g_cia_p[i].timer[j] = (uint16_t *)(g_memory.io_p + cia_reg_timer_low[i][j]);
     }
   }
 
@@ -639,10 +639,10 @@ void cia_init()
    * to, set them to random value.
    */
   
-  *g_cia_a[CIA1].timer[A] = g_if_host.if_host_rand.rand_get_fp();
-  *g_cia_a[CIA1].timer[B] = g_if_host.if_host_rand.rand_get_fp();
-  *g_cia_a[CIA2].timer[A] = g_if_host.if_host_rand.rand_get_fp();
-  *g_cia_a[CIA2].timer[B] = g_if_host.if_host_rand.rand_get_fp();
+  *g_cia_p[CIA1].timer[A] = g_if_host.if_host_rand.rand_get_fp();
+  *g_cia_p[CIA1].timer[B] = g_if_host.if_host_rand.rand_get_fp();
+  *g_cia_p[CIA2].timer[A] = g_if_host.if_host_rand.rand_get_fp();
+  *g_cia_p[CIA2].timer[B] = g_if_host.if_host_rand.rand_get_fp();
 
   bus_event_read_subscribe(REG_CIA1_INTERRUPT_CONTROL_REG, cia1_event_read_irq_ctrl);
   bus_event_read_subscribe(REG_CIA1_DATA_PORT_A, cia1_event_read_porta);
@@ -711,15 +711,15 @@ void cia_step(uint32_t cc)
     for(j = 0; j < 2; j++)
     {
       /* First check if the timer is on or not */
-      if(g_cia_a[i].status_control_reg[j] & MASK_CIA_CONTROL_START_STOP_TIMER)
+      if(g_cia_p[i].status_control_reg[j] & MASK_CIA_CONTROL_START_STOP_TIMER)
       {
         /* Will this timer underflow? */
-        if(*g_cia_a[i].timer[j] <= cycles)
+        if(*g_cia_p[i].timer[j] <= cycles)
         {
-          *g_cia_a[i].timer[j] = 0;
+          *g_cia_p[i].timer[j] = 0;
 
           /* Is the interrupt enabled? */
-          if(g_cia_a[i].status_irq_mask_reg & cia_int_mask[j]) /* Interrupt enable? */
+          if(g_cia_p[i].status_irq_mask_reg & cia_int_mask[j]) /* Interrupt enable? */
           {
             if(i == CIA1)
             {
@@ -742,27 +742,27 @@ void cia_step(uint32_t cc)
             g_memory.io_p[cia_reg_int[i]] = cia_int_reason[j];
           }
 
-          if(g_cia_a[i].status_control_reg[j] & MASK_CIA_CONTROL_RUN_MODE) /* Single shot */
+          if(g_cia_p[i].status_control_reg[j] & MASK_CIA_CONTROL_RUN_MODE) /* Single shot */
           {
             /*
              * In one-shot mode, the timer will count down from the latched value
              * to zero, generate an interrupt, reload the latched value,
              * then stop.
              */
-            *g_cia_a[i].timer[j] = g_cia_a[i].timer_latch[j];
+            *g_cia_p[i].timer[j] = g_cia_p[i].timer_latch[j];
             g_memory.io_p[cia_reg_ctrl[i][j]] &= ~MASK_CIA_CONTROL_START_STOP_TIMER;
-            g_cia_a[i].status_control_reg[j] &= ~MASK_CIA_CONTROL_START_STOP_TIMER;
+            g_cia_p[i].status_control_reg[j] &= ~MASK_CIA_CONTROL_START_STOP_TIMER;
 
           }
           else /* Contineuous */
           {
             /* In continous mode just reload the latch and continue */
-            *g_cia_a[i].timer[j] = g_cia_a[i].timer_latch[j];
+            *g_cia_p[i].timer[j] = g_cia_p[i].timer_latch[j];
           }
         }
         else
         {
-          *g_cia_a[i].timer[j] -= cycles;
+          *g_cia_p[i].timer[j] -= cycles;
         }
       }
     }
@@ -773,7 +773,7 @@ void cia_request_irq_tape()
 {
   /* Set reason for interrupt */
   g_memory.io_p[REG_CIA1_INTERRUPT_CONTROL_REG] |= MASK_CIA_INTERRUPT_CONTROL_REG_FLAG1;
-  if(g_cia_a[CIA1].status_irq_mask_reg & MASK_CIA_INTERRUPT_CONTROL_REG_FLAG1) /* Interrupt enable? */
+  if(g_cia_p[CIA1].status_irq_mask_reg & MASK_CIA_INTERRUPT_CONTROL_REG_FLAG1) /* Interrupt enable? */
   {
     /* Set IRQ line low*/
     g_memory.io_p[REG_CIA1_INTERRUPT_CONTROL_REG] |= MASK_CIA_INTERRUPT_CONTROL_REG_MULTI;
@@ -820,7 +820,7 @@ void cia_tenth_second()
    */
   if(g_memory.io_p != NULL)
   {
-    if(g_cia_a[CIA1].tod_started)
+    if(g_cia_p[CIA1].tod_started)
     {
       g_memory.io_p[REG_CIA1_TIME_OF_DAY_TENTH_SEC] = g_tenth_second;
       g_memory.io_p[REG_CIA1_TIME_OF_DAY_SEC] = dec2bcd(g_seconds);
@@ -828,7 +828,7 @@ void cia_tenth_second()
       g_memory.io_p[REG_CIA1_TIME_OF_DAY_HOURS] = dec2bcd(g_hours);
     }
 
-    if(g_cia_a[CIA2].tod_started)
+    if(g_cia_p[CIA2].tod_started)
     {
       g_memory.io_p[REG_CIA2_TIME_OF_DAY_TENTH_SEC] = g_tenth_second;
       g_memory.io_p[REG_CIA2_TIME_OF_DAY_SEC] = dec2bcd(g_seconds);

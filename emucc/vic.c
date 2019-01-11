@@ -266,7 +266,7 @@ typedef struct
   uint32_t bitmap_multi_color_0; /* Is set when bitmap rendered */
   uint32_t bitmap_multi_color_1; /* Is set when bitmap rendered */
   uint32_t bitmap_color; /* Is set when bitmap rendered */
-  uint8_t bitmap_a[SPRITE_HEIGHT * SPRITE_WIDTH]; /* Is set when sprite is rendered */
+  uint8_t bitmap_p[SPRITE_HEIGHT * SPRITE_WIDTH]; /* Is set when sprite is rendered */
   uint32_t checksum; /* Checksum for the dot matrix. Makes it possible to know if bitmap needs refresh */
 } sprite_t;
 
@@ -304,7 +304,7 @@ static uint8_t *g_bg_color_pp[4]; /* Pointer to vic memory */
 static uint8_t g_x_scroll;
 static uint8_t g_y_scroll;
 static uint8_t g_window_row_cnt; /* AKA "RC" */
-static uint8_t g_sprite_presence_a[LINE_MAX + SPRITE_HEIGHT*2]; /* Tracking sprites for line */
+static uint8_t g_sprite_presence_p[LINE_MAX + SPRITE_HEIGHT*2]; /* Tracking sprites for line */
 
 /*
  * The simple way is just to move a sprite when it changes its x and y values.
@@ -313,11 +313,11 @@ static uint8_t g_sprite_presence_a[LINE_MAX + SPRITE_HEIGHT*2]; /* Tracking spri
  * The fix for this is to instead of drawing the sprite directly, queue it up and
  * draw it only when needed, i.e when the raster line meets the y coordinate of the sprite.
  */
-static uint8_t g_sprite_redraw_queue_a[LINE_MAX];
+static uint8_t g_sprite_redraw_queue_p[LINE_MAX];
 static uint8_t g_full_frame_rate;
 static uint8_t g_lock_frame_rate;
 static uint8_t g_display_frame; /* Hold every second frame (graphics fg and bg) to gain performance */
-static uint8_t g_char_pointers_a[41]; /* Char pointers are loaded when bad line occurs */
+static uint8_t g_char_pointers_p[41]; /* Char pointers are loaded when bad line occurs */
 
 static uint32_t g_sprite_present_on_current_line;
 static uint32_t g_fps_saved_time;
@@ -360,16 +360,16 @@ static uint32_t g_CSEL_active; /* When CSEL is 0 the display is 38 columns inste
 
 static int32_t g_ucycles_in_queue; /* Micro cycles left in vic queue waiting to be used */
 
-static sprite_t g_sprites_a[8];
+static sprite_t g_sprites_p[8];
 static vic_state_t g_vic_state;
 
 static void event_write_xsprite0(uint16_t addr, uint8_t value)
 {
-  if((g_sprites_a[0].x & 0xFF) != value)
+  if((g_sprites_p[0].x & 0xFF) != value)
   {
-    g_sprites_a[0].x &= 0x100;
-    g_sprites_a[0].x |= value;
-    g_sprite_redraw_queue_a[g_sprites_a[0].y] |= 1 << 0;
+    g_sprites_p[0].x &= 0x100;
+    g_sprites_p[0].x |= value;
+    g_sprite_redraw_queue_p[g_sprites_p[0].y] |= 1 << 0;
   }
 
   g_memory.io_p[addr] = value;
@@ -377,19 +377,19 @@ static void event_write_xsprite0(uint16_t addr, uint8_t value)
 
 static void event_write_ysprite0(uint16_t addr, uint8_t value)
 {
-  if(g_sprites_a[0].y != value)
+  if(g_sprites_p[0].y != value)
   {
     /*
      * Remove sprite if it has been drawn on sprite layer. Otherwise
      * it might be drawn at wrong position if sprite has been
      * moved downward.
      */
-    erase_sprite(0, g_sprites_a[0].x_prev_slayer_pos, g_sprites_a[0].y_prev_slayer_pos);
+    erase_sprite(0, g_sprites_p[0].x_prev_slayer_pos, g_sprites_p[0].y_prev_slayer_pos);
 
     /* Remove the old queue marker if any before entering a new */
-    g_sprite_redraw_queue_a[g_sprites_a[0].y] &= ~(1 << 0);
-    g_sprites_a[0].y = value;
-    g_sprite_redraw_queue_a[g_sprites_a[0].y] |= (1 << 0);
+    g_sprite_redraw_queue_p[g_sprites_p[0].y] &= ~(1 << 0);
+    g_sprites_p[0].y = value;
+    g_sprite_redraw_queue_p[g_sprites_p[0].y] |= (1 << 0);
   }
 
   g_memory.io_p[addr] = value;
@@ -397,11 +397,11 @@ static void event_write_ysprite0(uint16_t addr, uint8_t value)
 
 static void event_write_xsprite1(uint16_t addr, uint8_t value)
 {
-  if((g_sprites_a[1].x & 0xFF) != value)
+  if((g_sprites_p[1].x & 0xFF) != value)
   {
-    g_sprites_a[1].x &= 0x100;
-    g_sprites_a[1].x |= value;
-    g_sprite_redraw_queue_a[g_sprites_a[1].y] |= 1 << 1;
+    g_sprites_p[1].x &= 0x100;
+    g_sprites_p[1].x |= value;
+    g_sprite_redraw_queue_p[g_sprites_p[1].y] |= 1 << 1;
   }
 
   g_memory.io_p[addr] = value;
@@ -409,13 +409,13 @@ static void event_write_xsprite1(uint16_t addr, uint8_t value)
 
 static void event_write_ysprite1(uint16_t addr, uint8_t value)
 {
-  if(g_sprites_a[1].y != value)
+  if(g_sprites_p[1].y != value)
   {
-    erase_sprite(1, g_sprites_a[1].x_prev_slayer_pos, g_sprites_a[1].y_prev_slayer_pos);
+    erase_sprite(1, g_sprites_p[1].x_prev_slayer_pos, g_sprites_p[1].y_prev_slayer_pos);
 
-    g_sprite_redraw_queue_a[g_sprites_a[1].y] &= ~(1 << 1);
-    g_sprites_a[1].y = value;
-    g_sprite_redraw_queue_a[g_sprites_a[1].y] |= (1 << 1);
+    g_sprite_redraw_queue_p[g_sprites_p[1].y] &= ~(1 << 1);
+    g_sprites_p[1].y = value;
+    g_sprite_redraw_queue_p[g_sprites_p[1].y] |= (1 << 1);
   }
 
   g_memory.io_p[addr] = value;
@@ -423,11 +423,11 @@ static void event_write_ysprite1(uint16_t addr, uint8_t value)
 
 static void event_write_xsprite2(uint16_t addr, uint8_t value)
 {
-  if((g_sprites_a[2].x & 0xFF) != value)
+  if((g_sprites_p[2].x & 0xFF) != value)
   {
-    g_sprites_a[2].x &= 0x100;
-    g_sprites_a[2].x |= value;
-    g_sprite_redraw_queue_a[g_sprites_a[2].y] |= 1 << 2;
+    g_sprites_p[2].x &= 0x100;
+    g_sprites_p[2].x |= value;
+    g_sprite_redraw_queue_p[g_sprites_p[2].y] |= 1 << 2;
   }
 
   g_memory.io_p[addr] = value;
@@ -435,13 +435,13 @@ static void event_write_xsprite2(uint16_t addr, uint8_t value)
 
 static void event_write_ysprite2(uint16_t addr, uint8_t value)
 {
-  if(g_sprites_a[2].y != value)
+  if(g_sprites_p[2].y != value)
   {
-    erase_sprite(2, g_sprites_a[2].x_prev_slayer_pos, g_sprites_a[2].y_prev_slayer_pos);
+    erase_sprite(2, g_sprites_p[2].x_prev_slayer_pos, g_sprites_p[2].y_prev_slayer_pos);
 
-    g_sprite_redraw_queue_a[g_sprites_a[2].y] &= ~(1 << 2);
-    g_sprites_a[2].y = value;
-    g_sprite_redraw_queue_a[g_sprites_a[2].y] |= (1 << 2);
+    g_sprite_redraw_queue_p[g_sprites_p[2].y] &= ~(1 << 2);
+    g_sprites_p[2].y = value;
+    g_sprite_redraw_queue_p[g_sprites_p[2].y] |= (1 << 2);
   }
 
   g_memory.io_p[addr] = value;
@@ -449,11 +449,11 @@ static void event_write_ysprite2(uint16_t addr, uint8_t value)
 
 static void event_write_xsprite3(uint16_t addr, uint8_t value)
 {
-  if((g_sprites_a[3].x & 0xFF) != value)
+  if((g_sprites_p[3].x & 0xFF) != value)
   {
-    g_sprites_a[3].x &= 0x100;
-    g_sprites_a[3].x |= value;
-    g_sprite_redraw_queue_a[g_sprites_a[3].y] |= 1 << 3;
+    g_sprites_p[3].x &= 0x100;
+    g_sprites_p[3].x |= value;
+    g_sprite_redraw_queue_p[g_sprites_p[3].y] |= 1 << 3;
   }
 
   g_memory.io_p[addr] = value;
@@ -461,13 +461,13 @@ static void event_write_xsprite3(uint16_t addr, uint8_t value)
 
 static void event_write_ysprite3(uint16_t addr, uint8_t value)
 {
-  if(g_sprites_a[3].y != value)
+  if(g_sprites_p[3].y != value)
   {
-    erase_sprite(3, g_sprites_a[3].x_prev_slayer_pos, g_sprites_a[3].y_prev_slayer_pos);
+    erase_sprite(3, g_sprites_p[3].x_prev_slayer_pos, g_sprites_p[3].y_prev_slayer_pos);
 
-    g_sprite_redraw_queue_a[g_sprites_a[3].y] &= ~(1 << 3);
-    g_sprites_a[3].y = value;
-    g_sprite_redraw_queue_a[g_sprites_a[3].y] |= (1 << 3);
+    g_sprite_redraw_queue_p[g_sprites_p[3].y] &= ~(1 << 3);
+    g_sprites_p[3].y = value;
+    g_sprite_redraw_queue_p[g_sprites_p[3].y] |= (1 << 3);
   }
 
   g_memory.io_p[addr] = value;
@@ -475,24 +475,24 @@ static void event_write_ysprite3(uint16_t addr, uint8_t value)
 
 static void event_write_xsprite4(uint16_t addr, uint8_t value)
 {
-  if((g_sprites_a[4].x & 0xFF) != value)
+  if((g_sprites_p[4].x & 0xFF) != value)
   {
-    g_sprites_a[4].x &= 0x100;
-    g_sprites_a[4].x |= value;
-    g_sprite_redraw_queue_a[g_sprites_a[4].y] |= 1 << 4;
+    g_sprites_p[4].x &= 0x100;
+    g_sprites_p[4].x |= value;
+    g_sprite_redraw_queue_p[g_sprites_p[4].y] |= 1 << 4;
   }
   g_memory.io_p[addr] = value;
 }
 
 static void event_write_ysprite4(uint16_t addr, uint8_t value)
 {
-  if(g_sprites_a[4].y != value)
+  if(g_sprites_p[4].y != value)
   {
-    erase_sprite(4, g_sprites_a[4].x_prev_slayer_pos, g_sprites_a[4].y_prev_slayer_pos);
+    erase_sprite(4, g_sprites_p[4].x_prev_slayer_pos, g_sprites_p[4].y_prev_slayer_pos);
 
-    g_sprite_redraw_queue_a[g_sprites_a[4].y] &= ~(1 << 4);
-    g_sprites_a[4].y = value;
-    g_sprite_redraw_queue_a[g_sprites_a[4].y] |= (1 << 4);
+    g_sprite_redraw_queue_p[g_sprites_p[4].y] &= ~(1 << 4);
+    g_sprites_p[4].y = value;
+    g_sprite_redraw_queue_p[g_sprites_p[4].y] |= (1 << 4);
   }
 
   g_memory.io_p[addr] = value;
@@ -500,11 +500,11 @@ static void event_write_ysprite4(uint16_t addr, uint8_t value)
 
 static void event_write_xsprite5(uint16_t addr, uint8_t value)
 {
-  if((g_sprites_a[5].x & 0xFF) != value)
+  if((g_sprites_p[5].x & 0xFF) != value)
   {
-    g_sprites_a[5].x &= 0x100;
-    g_sprites_a[5].x |= value;
-    g_sprite_redraw_queue_a[g_sprites_a[5].y] |= 1 << 5;
+    g_sprites_p[5].x &= 0x100;
+    g_sprites_p[5].x |= value;
+    g_sprite_redraw_queue_p[g_sprites_p[5].y] |= 1 << 5;
   }
 
   g_memory.io_p[addr] = value;
@@ -512,13 +512,13 @@ static void event_write_xsprite5(uint16_t addr, uint8_t value)
 
 static void event_write_ysprite5(uint16_t addr, uint8_t value)
 {
-  if(g_sprites_a[5].y != value)
+  if(g_sprites_p[5].y != value)
   {
-    erase_sprite(5, g_sprites_a[5].x_prev_slayer_pos, g_sprites_a[5].y_prev_slayer_pos);
+    erase_sprite(5, g_sprites_p[5].x_prev_slayer_pos, g_sprites_p[5].y_prev_slayer_pos);
 
-    g_sprite_redraw_queue_a[g_sprites_a[5].y] &= ~(1 << 5);
-    g_sprites_a[5].y = value;
-    g_sprite_redraw_queue_a[g_sprites_a[5].y] |= (1 << 5);
+    g_sprite_redraw_queue_p[g_sprites_p[5].y] &= ~(1 << 5);
+    g_sprites_p[5].y = value;
+    g_sprite_redraw_queue_p[g_sprites_p[5].y] |= (1 << 5);
   }
 
   g_memory.io_p[addr] = value;
@@ -526,11 +526,11 @@ static void event_write_ysprite5(uint16_t addr, uint8_t value)
 
 static void event_write_xsprite6(uint16_t addr, uint8_t value)
 {
-  if((g_sprites_a[6].x & 0xFF) != value)
+  if((g_sprites_p[6].x & 0xFF) != value)
   {
-    g_sprites_a[6].x &= 0x100;
-    g_sprites_a[6].x |= value;
-    g_sprite_redraw_queue_a[g_sprites_a[6].y] |= 1 << 6;
+    g_sprites_p[6].x &= 0x100;
+    g_sprites_p[6].x |= value;
+    g_sprite_redraw_queue_p[g_sprites_p[6].y] |= 1 << 6;
   }
 
   g_memory.io_p[addr] = value;
@@ -538,13 +538,13 @@ static void event_write_xsprite6(uint16_t addr, uint8_t value)
 
 static void event_write_ysprite6(uint16_t addr, uint8_t value)
 {
-  if(g_sprites_a[6].y != value)
+  if(g_sprites_p[6].y != value)
   {
-    erase_sprite(6, g_sprites_a[6].x_prev_slayer_pos, g_sprites_a[6].y_prev_slayer_pos);
+    erase_sprite(6, g_sprites_p[6].x_prev_slayer_pos, g_sprites_p[6].y_prev_slayer_pos);
 
-    g_sprite_redraw_queue_a[g_sprites_a[6].y] &= ~(1 << 6);
-    g_sprites_a[6].y = value;
-    g_sprite_redraw_queue_a[g_sprites_a[6].y] |= (1 << 6);
+    g_sprite_redraw_queue_p[g_sprites_p[6].y] &= ~(1 << 6);
+    g_sprites_p[6].y = value;
+    g_sprite_redraw_queue_p[g_sprites_p[6].y] |= (1 << 6);
   }
 
   g_memory.io_p[addr] = value;
@@ -552,11 +552,11 @@ static void event_write_ysprite6(uint16_t addr, uint8_t value)
 
 static void event_write_xsprite7(uint16_t addr, uint8_t value)
 {
-  if((g_sprites_a[7].x & 0xFF) != value)
+  if((g_sprites_p[7].x & 0xFF) != value)
   {
-    g_sprites_a[7].x &= 0x100;
-    g_sprites_a[7].x |= value;
-    g_sprite_redraw_queue_a[g_sprites_a[7].y] |= 1 << 7;
+    g_sprites_p[7].x &= 0x100;
+    g_sprites_p[7].x |= value;
+    g_sprite_redraw_queue_p[g_sprites_p[7].y] |= 1 << 7;
   }
 
   g_memory.io_p[addr] = value;
@@ -564,13 +564,13 @@ static void event_write_xsprite7(uint16_t addr, uint8_t value)
 
 static void event_write_ysprite7(uint16_t addr, uint8_t value)
 {
-  if(g_sprites_a[7].y != value)
+  if(g_sprites_p[7].y != value)
   {
-    erase_sprite(7, g_sprites_a[7].x_prev_slayer_pos, g_sprites_a[7].y_prev_slayer_pos);
+    erase_sprite(7, g_sprites_p[7].x_prev_slayer_pos, g_sprites_p[7].y_prev_slayer_pos);
 
-    g_sprite_redraw_queue_a[g_sprites_a[7].y] &= ~(1 << 7);
-    g_sprites_a[7].y = value;
-    g_sprite_redraw_queue_a[g_sprites_a[7].y] |= (1 << 7);
+    g_sprite_redraw_queue_p[g_sprites_p[7].y] &= ~(1 << 7);
+    g_sprites_p[7].y = value;
+    g_sprite_redraw_queue_p[g_sprites_p[7].y] |= (1 << 7);
   }
 
   g_memory.io_p[addr] = value;
@@ -583,17 +583,17 @@ static void event_write_xmsb(uint16_t addr, uint8_t value)
   for(i = 0; i < 8; i++)
   {
     uint32_t masked = (value << (8 - i) & 0x100);
-    if((g_sprites_a[i].x & 0x100) != masked)  
+    if((g_sprites_p[i].x & 0x100) != masked)  
     {
       if(masked)
       {
-        g_sprites_a[i].x |= 0x100;
+        g_sprites_p[i].x |= 0x100;
       }
       else
       {
-        g_sprites_a[i].x &= ~0x100;
+        g_sprites_p[i].x &= ~0x100;
       }
-      g_sprite_redraw_queue_a[g_sprites_a[i].y] |= (1 << i);
+      g_sprite_redraw_queue_p[g_sprites_p[i].y] |= (1 << i);
     }
   }
 
@@ -637,7 +637,7 @@ static void event_write_sprite_enabled(uint16_t addr, uint8_t value)
   for(i = 0; i < 8; i++)
   {
     masked = (value & (MASK_SPRITE_ENABLED_0 << i));
-    if(g_sprites_a[i].enabled != masked)
+    if(g_sprites_p[i].enabled != masked)
     {
       /*
        * This needs to be handled directly, since otherwise the combination of a
@@ -645,13 +645,13 @@ static void event_write_sprite_enabled(uint16_t addr, uint8_t value)
        */
       if(masked)
       {
-        g_sprites_a[i].enabled = masked;
-        draw_sprite(i, g_sprites_a[i].x, g_sprites_a[i].y);
+        g_sprites_p[i].enabled = masked;
+        draw_sprite(i, g_sprites_p[i].x, g_sprites_p[i].y);
       }
       else
       {
-        erase_sprite(i, g_sprites_a[i].x_prev_slayer_pos, g_sprites_a[i].y_prev_slayer_pos);
-        g_sprites_a[i].enabled = masked; /* Yes, this should be after erase */
+        erase_sprite(i, g_sprites_p[i].x_prev_slayer_pos, g_sprites_p[i].y_prev_slayer_pos);
+        g_sprites_p[i].enabled = masked; /* Yes, this should be after erase */
       }
     }
   }
@@ -676,10 +676,10 @@ static void event_write_sprite_yexp(uint16_t addr, uint8_t value)
   for(i = 0; i < 8; i++)
   {
     masked = (value & (MASK_SPRITE_Y_EXP_0 << i));
-    if(g_sprites_a[i].y_exp != masked)
+    if(g_sprites_p[i].y_exp != masked)
     {
-      g_sprites_a[i].y_exp = masked;
-      g_sprites_a[i].y_exp_changed = 1;
+      g_sprites_p[i].y_exp = masked;
+      g_sprites_p[i].y_exp_changed = 1;
     }
   }
   
@@ -751,10 +751,10 @@ static void event_write_sprite_prio(uint16_t addr, uint8_t value)
   for(i = 0; i < 8; i++)
   {
     masked = (value & (MASK_SPRITE_DATA_PRIO_0 << i));
-    if(g_sprites_a[i].prio != masked)
+    if(g_sprites_p[i].prio != masked)
     {
-      g_sprites_a[i].prio = masked;
-      g_sprites_a[i].prio_changed = 1;
+      g_sprites_p[i].prio = masked;
+      g_sprites_p[i].prio_changed = 1;
     }
   }
 
@@ -769,10 +769,10 @@ static void event_write_sprite_multicolor(uint16_t addr, uint8_t value)
   for(i = 0; i < 8; i++)
   {
     masked = (value & (MASK_SPRITE_MCOLOR_0 << i));
-    if(g_sprites_a[i].multi_color_mode != masked)
+    if(g_sprites_p[i].multi_color_mode != masked)
     {
-      g_sprites_a[i].multi_color_mode = masked;
-      g_sprites_a[i].multi_color_mode_changed = 1;
+      g_sprites_p[i].multi_color_mode = masked;
+      g_sprites_p[i].multi_color_mode_changed = 1;
     }
   }
 
@@ -787,10 +787,10 @@ static void event_write_sprite_xexp(uint16_t addr, uint8_t value)
   for(i = 0; i < 8; i++)
   {
     masked = (value & (MASK_SPRITE_X_EXP_0 << i));
-    if(g_sprites_a[i].x_exp != masked)
+    if(g_sprites_p[i].x_exp != masked)
     {
-      g_sprites_a[i].x_exp = masked;
-      g_sprites_a[i].x_exp_changed = 1;
+      g_sprites_p[i].x_exp = masked;
+      g_sprites_p[i].x_exp_changed = 1;
     }
   }
 
@@ -816,7 +816,7 @@ static void event_write_sprite_multicolor0(uint16_t addr, uint8_t value)
 
   for(i = 0; i < 8; i++)
   {
-    g_sprites_a[i].multi_color_mode_changed = 1;
+    g_sprites_p[i].multi_color_mode_changed = 1;
   }
 }
 
@@ -829,16 +829,16 @@ static void event_write_sprite_multicolor1(uint16_t addr, uint8_t value)
 
   for(i = 0; i < 8; i++)
   {
-    g_sprites_a[i].multi_color_mode_changed = 1;
+    g_sprites_p[i].multi_color_mode_changed = 1;
   }
 }
 
 static void event_write_sprite_color0(uint16_t addr, uint8_t value)
 {
-  if(g_sprites_a[0].color != (value & MASK_COLOR_SPRITE_0_M0C))
+  if(g_sprites_p[0].color != (value & MASK_COLOR_SPRITE_0_M0C))
   {    
-    g_sprites_a[0].color = value & MASK_COLOR_SPRITE_0_M0C;
-    g_sprites_a[0].color_changed = 1;
+    g_sprites_p[0].color = value & MASK_COLOR_SPRITE_0_M0C;
+    g_sprites_p[0].color_changed = 1;
   }
 
   g_memory.io_p[addr] = value;
@@ -846,10 +846,10 @@ static void event_write_sprite_color0(uint16_t addr, uint8_t value)
 
 static void event_write_sprite_color1(uint16_t addr, uint8_t value)
 {
-  if(g_sprites_a[1].color != (value & MASK_COLOR_SPRITE_1_M1C))
+  if(g_sprites_p[1].color != (value & MASK_COLOR_SPRITE_1_M1C))
   {
-    g_sprites_a[1].color = value & MASK_COLOR_SPRITE_1_M1C;
-    g_sprites_a[1].color_changed = 1;
+    g_sprites_p[1].color = value & MASK_COLOR_SPRITE_1_M1C;
+    g_sprites_p[1].color_changed = 1;
   }
 
   g_memory.io_p[addr] = value;
@@ -857,10 +857,10 @@ static void event_write_sprite_color1(uint16_t addr, uint8_t value)
 
 static void event_write_sprite_color2(uint16_t addr, uint8_t value)
 {
-  if(g_sprites_a[2].color != (value & MASK_COLOR_SPRITE_2_M2C))
+  if(g_sprites_p[2].color != (value & MASK_COLOR_SPRITE_2_M2C))
   {
-    g_sprites_a[2].color = value & MASK_COLOR_SPRITE_2_M2C;
-    g_sprites_a[2].color_changed = 1;
+    g_sprites_p[2].color = value & MASK_COLOR_SPRITE_2_M2C;
+    g_sprites_p[2].color_changed = 1;
   }
 
   g_memory.io_p[addr] = value;
@@ -868,10 +868,10 @@ static void event_write_sprite_color2(uint16_t addr, uint8_t value)
 
 static void event_write_sprite_color3(uint16_t addr, uint8_t value)
 {
-  if(g_sprites_a[3].color != (value & MASK_COLOR_SPRITE_3_M3C))
+  if(g_sprites_p[3].color != (value & MASK_COLOR_SPRITE_3_M3C))
   {
-    g_sprites_a[3].color = value & MASK_COLOR_SPRITE_3_M3C;
-    g_sprites_a[3].color_changed = 1;
+    g_sprites_p[3].color = value & MASK_COLOR_SPRITE_3_M3C;
+    g_sprites_p[3].color_changed = 1;
   }
 
   g_memory.io_p[addr] = value;
@@ -879,10 +879,10 @@ static void event_write_sprite_color3(uint16_t addr, uint8_t value)
 
 static void event_write_sprite_color4(uint16_t addr, uint8_t value)
 {
-  if(g_sprites_a[4].color != (value & MASK_COLOR_SPRITE_4_M4C))
+  if(g_sprites_p[4].color != (value & MASK_COLOR_SPRITE_4_M4C))
   {
-    g_sprites_a[4].color = value & MASK_COLOR_SPRITE_4_M4C;
-    g_sprites_a[4].color_changed = 1;
+    g_sprites_p[4].color = value & MASK_COLOR_SPRITE_4_M4C;
+    g_sprites_p[4].color_changed = 1;
   }
 
   g_memory.io_p[addr] = value;
@@ -890,10 +890,10 @@ static void event_write_sprite_color4(uint16_t addr, uint8_t value)
 
 static void event_write_sprite_color5(uint16_t addr, uint8_t value)
 {
-  if(g_sprites_a[5].color != (value & MASK_COLOR_SPRITE_5_M5C))
+  if(g_sprites_p[5].color != (value & MASK_COLOR_SPRITE_5_M5C))
   {
-    g_sprites_a[5].color = value & MASK_COLOR_SPRITE_5_M5C;
-    g_sprites_a[5].color_changed = 1;
+    g_sprites_p[5].color = value & MASK_COLOR_SPRITE_5_M5C;
+    g_sprites_p[5].color_changed = 1;
   }
 
   g_memory.io_p[addr] = value;
@@ -901,10 +901,10 @@ static void event_write_sprite_color5(uint16_t addr, uint8_t value)
 
 static void event_write_sprite_color6(uint16_t addr, uint8_t value)
 {
-  if(g_sprites_a[6].color != (value & MASK_COLOR_SPRITE_6_M6C))
+  if(g_sprites_p[6].color != (value & MASK_COLOR_SPRITE_6_M6C))
   {
-    g_sprites_a[6].color = value & MASK_COLOR_SPRITE_6_M6C;
-    g_sprites_a[6].color_changed = 1;
+    g_sprites_p[6].color = value & MASK_COLOR_SPRITE_6_M6C;
+    g_sprites_p[6].color_changed = 1;
   }
 
   g_memory.io_p[addr] = value;
@@ -912,10 +912,10 @@ static void event_write_sprite_color6(uint16_t addr, uint8_t value)
 
 static void event_write_sprite_color7(uint16_t addr, uint8_t value)
 {
-  if(g_sprites_a[7].color != (value & MASK_COLOR_SPRITE_7_M7C))
+  if(g_sprites_p[7].color != (value & MASK_COLOR_SPRITE_7_M7C))
   {
-    g_sprites_a[7].color = value & MASK_COLOR_SPRITE_7_M7C;
-    g_sprites_a[7].color_changed = 1;
+    g_sprites_p[7].color = value & MASK_COLOR_SPRITE_7_M7C;
+    g_sprites_p[7].color_changed = 1;
   }
 
   g_memory.io_p[addr] = value;
@@ -1058,7 +1058,7 @@ static inline void load_dot_matrix_STM_MTM()
 {
   /* First calculate offset */
   uint32_t char_offset =
-      (g_char_pointers_a[g_window_text_line_char_cnt] << 3) + /* AKA D0-D7 */
+      (g_char_pointers_p[g_window_text_line_char_cnt] << 3) + /* AKA D0-D7 */
       g_window_row_cnt; /* AKA RC0-RC2 */
 
   /* Vic will always see char rom at 0x1000 - 0x1FFF for bank 0 and 2 */
@@ -1096,7 +1096,7 @@ static inline void load_dot_matrix_ECM()
 {
   /* First calculate offset */
   uint32_t char_offset =
-      ((g_char_pointers_a[g_window_text_line_char_cnt] & 0x3F) << 3) + /* AKA D0-D7 */
+      ((g_char_pointers_p[g_window_text_line_char_cnt] & 0x3F) << 3) + /* AKA D0-D7 */
       (g_window_row_cnt); /* AKA RC0-RC2 */
 
   /* Vic will always see char rom at 0x1000 - 0x1FFF for bank 0 and 2 */
@@ -1175,19 +1175,19 @@ static void erase_sprite(uint32_t sprite, uint32_t at_x, uint32_t at_y)
   uint8_t *fg_sprite_p = g_sprite_layer_addr_start_aap[VIC_MEM_SPRITE_FORGROUND];
   uint8_t *bg_sprite_p = g_sprite_layer_addr_start_aap[VIC_MEM_SPRITE_BACKGROUND];
   uint8_t *map_p = g_pixel_sprite_mapping_start_p;
-  uint8_t y_exp_factor = g_sprites_a[sprite].y_exp_factor;
-  uint8_t x_exp_factor = g_sprites_a[sprite].x_exp_factor;
+  uint8_t y_exp_factor = g_sprites_p[sprite].y_exp_factor;
+  uint8_t x_exp_factor = g_sprites_p[sprite].x_exp_factor;
   uint32_t sprite_bitmap_offset = 0;
   uint8_t sprite_bf = (0x01 << sprite);
 
   /* Don't do anything if sprite is not there */
-  if(!g_sprites_a[sprite].enabled || g_sprites_a[sprite].x_prev_slayer_pos == SPRITE_NO_POS)
+  if(!g_sprites_p[sprite].enabled || g_sprites_p[sprite].x_prev_slayer_pos == SPRITE_NO_POS)
   {
     return;
   }
 
-  g_sprites_a[sprite].x_prev_slayer_pos = SPRITE_NO_POS;
-  g_sprites_a[sprite].y_prev_slayer_pos = SPRITE_NO_POS;
+  g_sprites_p[sprite].x_prev_slayer_pos = SPRITE_NO_POS;
+  g_sprites_p[sprite].y_prev_slayer_pos = SPRITE_NO_POS;
 
   /* Set pointers to the start of relevant pixel */
   fg_sprite_p += at_y * PIXELS_MAX + at_x + PIXEL_SPRITE_X_START;
@@ -1221,28 +1221,28 @@ static void erase_sprite(uint32_t sprite, uint32_t at_x, uint32_t at_y)
             (map_tmp & 0x01)) /* See if other sprite with lower prio exist and then render that pixel */
           {
             /* Some adjustments are needed, since the two sprites are not necessarily aligned */
-            uint32_t x_sum = (at_x - g_sprites_a[cnt].x_prev_slayer_pos + x);
-            uint32_t y_sum = (at_y - g_sprites_a[cnt].y_prev_slayer_pos + y);
+            uint32_t x_sum = (at_x - g_sprites_p[cnt].x_prev_slayer_pos + x);
+            uint32_t y_sum = (at_y - g_sprites_p[cnt].y_prev_slayer_pos + y);
 
-            if(g_sprites_a[sprite].x_exp_factor == 0x02)
+            if(g_sprites_p[sprite].x_exp_factor == 0x02)
             {
               x_sum /=2;
             }
 
-            if(g_sprites_a[sprite].y_exp_factor == 0x02)
+            if(g_sprites_p[sprite].y_exp_factor == 0x02)
             {
               y_sum /=2;              
             }
 
-            //if(g_sprites_a[cnt].bitmap_a[y_sum * SPRITE_WIDTH + x_sum] == SPRITE_NONE) while(1){;}
+            //if(g_sprites_p[cnt].bitmap_p[y_sum * SPRITE_WIDTH + x_sum] == SPRITE_NONE) while(1){;}
             /* Now just render the sprite that was found "underneath" */
-            if(!g_sprites_a[cnt].prio) /* 0 prio means rendering in front of fg pixels */
+            if(!g_sprites_p[cnt].prio) /* 0 prio means rendering in front of fg pixels */
             {
-              fg_sprite_p[x] = g_sprites_a[cnt].bitmap_a[y_sum * SPRITE_WIDTH + x_sum];
+              fg_sprite_p[x] = g_sprites_p[cnt].bitmap_p[y_sum * SPRITE_WIDTH + x_sum];
             }
             else
             {
-              bg_sprite_p[x] = g_sprites_a[cnt].bitmap_a[y_sum * SPRITE_WIDTH + x_sum];
+              bg_sprite_p[x] = g_sprites_p[cnt].bitmap_p[y_sum * SPRITE_WIDTH + x_sum];
             }
 
             break;
@@ -1307,7 +1307,7 @@ static void erase_sprite(uint32_t sprite, uint32_t at_x, uint32_t at_y)
     }
 
     /* Sprite is not on this row anymore */
-    g_sprite_presence_a[at_y + y] &= ~sprite_bf;
+    g_sprite_presence_p[at_y + y] &= ~sprite_bf;
   }
 }
 
@@ -1319,8 +1319,8 @@ static void draw_sprite(uint32_t sprite, uint32_t at_x, uint32_t at_y)
   uint8_t *bg_sprite_p = g_sprite_layer_addr_start_aap[VIC_MEM_SPRITE_BACKGROUND];
   uint8_t *map_p = g_pixel_sprite_mapping_start_p;
   uint8_t *pixel_p;
-  uint8_t y_exp_factor = g_sprites_a[sprite].y_exp_factor;
-  uint8_t x_exp_factor = g_sprites_a[sprite].x_exp_factor;
+  uint8_t y_exp_factor = g_sprites_p[sprite].y_exp_factor;
+  uint8_t x_exp_factor = g_sprites_p[sprite].x_exp_factor;
   uint8_t ss_coll = 0x00;
   uint8_t sprite_bf = (0x01 << sprite);
 
@@ -1329,7 +1329,7 @@ static void draw_sprite(uint32_t sprite, uint32_t at_x, uint32_t at_y)
    * Don't forget x2 in the case the sprite is extended, dont care to check
    * if this sprite is expanded since it is not shown anyway.
    */
-  if(!g_sprites_a[sprite].enabled || g_sprites_a[sprite].x > (PIXELS_MAX - SPRITE_WIDTH*2))
+  if(!g_sprites_p[sprite].enabled || g_sprites_p[sprite].x > (PIXELS_MAX - SPRITE_WIDTH*2))
   {
     return;
   }
@@ -1344,7 +1344,7 @@ static void draw_sprite(uint32_t sprite, uint32_t at_x, uint32_t at_y)
    * This will copy the dot matrix of whole sprite onto the sprite layer.
    * The offset to dot matrix will be represented as BANK | MP7-MP0 | MC5-MC0
    */
-  pixel_p = g_sprites_a[sprite].bitmap_a;
+  pixel_p = g_sprites_p[sprite].bitmap_p;
 
   for(y = 0; y < SPRITE_HEIGHT * y_exp_factor; y++)
   {
@@ -1354,8 +1354,8 @@ static void draw_sprite(uint32_t sprite, uint32_t at_x, uint32_t at_y)
       {
         uint8_t map_tmp = map_p[x];
 
-        if(g_sprites_a[sprite].y >= LINE_DISP_WIND_START &&
-           g_sprites_a[sprite].y <= LINE_BORD_LOWER_START) /* Only count collisions within display window lines */
+        if(g_sprites_p[sprite].y >= LINE_DISP_WIND_START &&
+           g_sprites_p[sprite].y <= LINE_BORD_LOWER_START) /* Only count collisions within display window lines */
         {
           /*
            * Sometime a sprite is redrawn when not first erased and this means that it will be part
@@ -1371,7 +1371,7 @@ static void draw_sprite(uint32_t sprite, uint32_t at_x, uint32_t at_y)
         map_tmp <<= (8 - sprite);
         if(map_tmp == 0x00)
         {
-          if(!g_sprites_a[sprite].prio) /* 0 prio means that sprite should be displayed in front of fg pixels */
+          if(!g_sprites_p[sprite].prio) /* 0 prio means that sprite should be displayed in front of fg pixels */
           {
             fg_sprite_p[x] = *pixel_p;
           }
@@ -1407,15 +1407,15 @@ static void draw_sprite(uint32_t sprite, uint32_t at_x, uint32_t at_y)
       }
     }
 
-    g_sprite_presence_a[at_y + y] |= sprite_bf;
+    g_sprite_presence_p[at_y + y] |= sprite_bf;
   }
 
   /*
    * The sprite has been drawn, now remember the position so that it
    * can be erased when needed.
    */
-  g_sprites_a[sprite].x_prev_slayer_pos = at_x;
-  g_sprites_a[sprite].y_prev_slayer_pos = at_y;
+  g_sprites_p[sprite].x_prev_slayer_pos = at_x;
+  g_sprites_p[sprite].y_prev_slayer_pos = at_y;
 
   /*
    * Sprite - Sprite collision
@@ -1469,7 +1469,7 @@ static void render_sprite(uint32_t sprite, uint32_t checksum, uint8_t *base_p)
       uint32_t i;
       uint8_t dot_matrix = *(base_p + y * SPRITE_WIDTH/8 + x);
 
-      if(g_sprites_a[sprite].multi_color_mode)
+      if(g_sprites_p[sprite].multi_color_mode)
       {
         /* Rendering takes place here */
         for(i = 0; i < 4; i++)
@@ -1485,7 +1485,7 @@ static void render_sprite(uint32_t sprite, uint32_t checksum, uint8_t *base_p)
             color = g_sprite_multi_color_0;
             break;
           case 0x80:
-            color = g_sprites_a[sprite].color;
+            color = g_sprites_p[sprite].color;
             break;
           case 0xC0:
             color = g_sprite_multi_color_1;
@@ -1493,8 +1493,8 @@ static void render_sprite(uint32_t sprite, uint32_t checksum, uint8_t *base_p)
           }
 
           dot_matrix <<= 2;
-          g_sprites_a[sprite].bitmap_a[y * SPRITE_WIDTH + x * 8 + i * 2] = color;
-          g_sprites_a[sprite].bitmap_a[y * SPRITE_WIDTH + x * 8 + i * 2 + 1] = color;
+          g_sprites_p[sprite].bitmap_p[y * SPRITE_WIDTH + x * 8 + i * 2] = color;
+          g_sprites_p[sprite].bitmap_p[y * SPRITE_WIDTH + x * 8 + i * 2 + 1] = color;
         }
       }
       else /* hi-res mode */
@@ -1505,7 +1505,7 @@ static void render_sprite(uint32_t sprite, uint32_t checksum, uint8_t *base_p)
 
           if(dot_matrix & 0x80)
           {
-            color = g_sprites_a[sprite].color;
+            color = g_sprites_p[sprite].color;
           }
           else
           {
@@ -1513,13 +1513,13 @@ static void render_sprite(uint32_t sprite, uint32_t checksum, uint8_t *base_p)
           }
 
           dot_matrix <<= 1;
-          g_sprites_a[sprite].bitmap_a[y * SPRITE_WIDTH + x * 8 + i] = color;
+          g_sprites_p[sprite].bitmap_p[y * SPRITE_WIDTH + x * 8 + i] = color;
         }
       }
     }
   }
 
-  g_sprites_a[sprite].checksum = checksum;
+  g_sprites_p[sprite].checksum = checksum;
 }
 
 static void handle_sprite_redraw_queue()
@@ -1528,26 +1528,26 @@ static void handle_sprite_redraw_queue()
    * Are there any sprites that needs to be redrawn due to movement?
    * Calling this function needs to be done at very specific locations.
    */
-  if(g_sprite_redraw_queue_a[g_screen_line_cnt])
+  if(g_sprite_redraw_queue_p[g_screen_line_cnt])
   {
     uint8_t i;
-    uint8_t tmp = g_sprite_redraw_queue_a[g_screen_line_cnt];
+    uint8_t tmp = g_sprite_redraw_queue_p[g_screen_line_cnt];
     for(i = 0; tmp != 0; i++)
     {
       if(tmp & 0x01)
       {
         /* Remember that this call will affect g_sprite_presence_a !! */
         move_sprite(i,
-                    g_sprites_a[i].x_prev_slayer_pos,
-                    g_sprites_a[i].y_prev_slayer_pos,
-                    g_sprites_a[i].x,
-                    g_sprites_a[i].y);
+                    g_sprites_p[i].x_prev_slayer_pos,
+                    g_sprites_p[i].y_prev_slayer_pos,
+                    g_sprites_p[i].x,
+                    g_sprites_p[i].y);
       }
       tmp >>= 1;
     }
 
     /* Remove redraw marker */
-    g_sprite_redraw_queue_a[g_screen_line_cnt] = 0;
+    g_sprite_redraw_queue_p[g_screen_line_cnt] = 0;
   }
 }
 
@@ -1561,12 +1561,12 @@ static void refresh_sprites()
     uint8_t *base_p;
     uint32_t sprite_offset;
 
-    if(!g_sprites_a[i].enabled) /* Just bail if not relevant */
+    if(!g_sprites_p[i].enabled) /* Just bail if not relevant */
     {
       continue;
     }
 
-    if((g_sprite_presence_a[g_screen_line_cnt] & (1 << i)) == 0x00)
+    if((g_sprite_presence_p[g_screen_line_cnt] & (1 << i)) == 0x00)
     {
       continue;
     }
@@ -1592,66 +1592,66 @@ static void refresh_sprites()
                                                      SPRITE_DOT_MATRIX_SIZE);
 
     /* If checksum has changed, then sprite needs to be rendered */
-    if(checksum != g_sprites_a[i].checksum)
+    if(checksum != g_sprites_p[i].checksum)
     {
       /* Since draw_sprite skips transparent pixels */
-      erase_sprite(i, g_sprites_a[i].x_prev_slayer_pos, g_sprites_a[i].y_prev_slayer_pos);
+      erase_sprite(i, g_sprites_p[i].x_prev_slayer_pos, g_sprites_p[i].y_prev_slayer_pos);
       render_sprite(i, checksum, base_p);
-      draw_sprite(i, g_sprites_a[i].x, g_sprites_a[i].y);
+      draw_sprite(i, g_sprites_p[i].x, g_sprites_p[i].y);
     }
 
     /* If sprite is disabled or enabled is handled directly and not here */
 
     /* If sprite prio changed */
-    if(g_sprites_a[i].prio_changed)
+    if(g_sprites_p[i].prio_changed)
     {
-      erase_sprite(i, g_sprites_a[i].x_prev_slayer_pos, g_sprites_a[i].y_prev_slayer_pos);
-      draw_sprite(i, g_sprites_a[i].x, g_sprites_a[i].y);
-      g_sprites_a[i].prio_changed = 0;
+      erase_sprite(i, g_sprites_p[i].x_prev_slayer_pos, g_sprites_p[i].y_prev_slayer_pos);
+      draw_sprite(i, g_sprites_p[i].x, g_sprites_p[i].y);
+      g_sprites_p[i].prio_changed = 0;
     }
 
-    if(g_sprites_a[i].y_exp_changed)
+    if(g_sprites_p[i].y_exp_changed)
     {
-      if(g_sprites_a[i].y_exp)
+      if(g_sprites_p[i].y_exp)
       {
-        erase_sprite(i, g_sprites_a[i].x_prev_slayer_pos, g_sprites_a[i].y_prev_slayer_pos);
-        g_sprites_a[i].y_exp_factor = 0x2; /* sprite x2 */
-        draw_sprite(i, g_sprites_a[i].x, g_sprites_a[i].y);
+        erase_sprite(i, g_sprites_p[i].x_prev_slayer_pos, g_sprites_p[i].y_prev_slayer_pos);
+        g_sprites_p[i].y_exp_factor = 0x2; /* sprite x2 */
+        draw_sprite(i, g_sprites_p[i].x, g_sprites_p[i].y);
       }
       else
       {
-        erase_sprite(i, g_sprites_a[i].x_prev_slayer_pos, g_sprites_a[i].y_prev_slayer_pos);
-        g_sprites_a[i].y_exp_factor = 0x1; /* sprite x1 */
-        draw_sprite(i, g_sprites_a[i].x, g_sprites_a[i].y);
+        erase_sprite(i, g_sprites_p[i].x_prev_slayer_pos, g_sprites_p[i].y_prev_slayer_pos);
+        g_sprites_p[i].y_exp_factor = 0x1; /* sprite x1 */
+        draw_sprite(i, g_sprites_p[i].x, g_sprites_p[i].y);
       }
-      g_sprites_a[i].y_exp_changed = 0; 
+      g_sprites_p[i].y_exp_changed = 0; 
     }
 
-    if(g_sprites_a[i].x_exp_changed)
+    if(g_sprites_p[i].x_exp_changed)
     {
-      if(g_sprites_a[i].x_exp)
+      if(g_sprites_p[i].x_exp)
       {
-        erase_sprite(i, g_sprites_a[i].x_prev_slayer_pos, g_sprites_a[i].y_prev_slayer_pos);
-        g_sprites_a[i].x_exp_factor = 0x2; /* sprite x2 */
-        draw_sprite(i, g_sprites_a[i].x, g_sprites_a[i].y);
+        erase_sprite(i, g_sprites_p[i].x_prev_slayer_pos, g_sprites_p[i].y_prev_slayer_pos);
+        g_sprites_p[i].x_exp_factor = 0x2; /* sprite x2 */
+        draw_sprite(i, g_sprites_p[i].x, g_sprites_p[i].y);
       }
       else
       {
-        erase_sprite(i, g_sprites_a[i].x_prev_slayer_pos, g_sprites_a[i].y_prev_slayer_pos);
-        g_sprites_a[i].x_exp_factor = 0x1; /* sprite x1 */
-        draw_sprite(i, g_sprites_a[i].x, g_sprites_a[i].y);
+        erase_sprite(i, g_sprites_p[i].x_prev_slayer_pos, g_sprites_p[i].y_prev_slayer_pos);
+        g_sprites_p[i].x_exp_factor = 0x1; /* sprite x1 */
+        draw_sprite(i, g_sprites_p[i].x, g_sprites_p[i].y);
       }
-      g_sprites_a[i].x_exp_changed = 0; 
+      g_sprites_p[i].x_exp_changed = 0; 
     }
 
     /* If sprite color/multi color changed */
-    if(g_sprites_a[i].color_changed || g_sprites_a[i].multi_color_mode_changed)
+    if(g_sprites_p[i].color_changed || g_sprites_p[i].multi_color_mode_changed)
     {
-      erase_sprite(i, g_sprites_a[i].x_prev_slayer_pos, g_sprites_a[i].y_prev_slayer_pos);
+      erase_sprite(i, g_sprites_p[i].x_prev_slayer_pos, g_sprites_p[i].y_prev_slayer_pos);
       render_sprite(i, checksum, base_p);
-      draw_sprite(i, g_sprites_a[i].x, g_sprites_a[i].y);
-      g_sprites_a[i].color_changed = 0;
-      g_sprites_a[i].multi_color_mode_changed = 0;
+      draw_sprite(i, g_sprites_p[i].x, g_sprites_p[i].y);
+      g_sprites_p[i].color_changed = 0;
+      g_sprites_p[i].multi_color_mode_changed = 0;
     }
   }
 }
@@ -1711,7 +1711,7 @@ static void new_text_line()
      * AKA c-access.
      * Char pointer will be represented as BANK | VM13-VM10 | VC9-VC0
      */
-    g_char_pointers_a[vmli] = g_screen_ram_p[g_window_video_cnt + vmli];
+    g_char_pointers_p[vmli] = g_screen_ram_p[g_window_video_cnt + vmli];
   }
 }
 
@@ -2343,10 +2343,10 @@ void vic_init()
   /* Set initial values for sprites */
   for(i = 0; i < 8; i++)
   {
-    g_sprites_a[i].y_exp_factor = 0x01;
-    g_sprites_a[i].x_exp_factor = 0x01;
-    g_sprites_a[i].y_prev_slayer_pos = SPRITE_NO_POS;
-    g_sprites_a[i].x_prev_slayer_pos = SPRITE_NO_POS;
+    g_sprites_p[i].y_exp_factor = 0x01;
+    g_sprites_p[i].x_exp_factor = 0x01;
+    g_sprites_p[i].y_prev_slayer_pos = SPRITE_NO_POS;
+    g_sprites_p[i].x_prev_slayer_pos = SPRITE_NO_POS;
   }
 }
 
@@ -2701,14 +2701,14 @@ GO_AGAIN:
           handle_sprite_redraw_queue();
 
           /* If sprites present, then get memory pointers and refresh them if needed */
-          if(g_sprite_presence_a[g_screen_line_cnt])
+          if(g_sprite_presence_p[g_screen_line_cnt])
           {
             g_sprite_present_on_current_line = 1;
             new_sprite_line();
             refresh_sprites();
 
             /* Vic will steal 2 cycles for every sprite on this row */
-            g_ucycles_in_queue += popcnt(g_sprite_presence_a[g_screen_line_cnt]) * UCYCLE_BAD_SPRITE;
+            g_ucycles_in_queue += popcnt(g_sprite_presence_p[g_screen_line_cnt]) * UCYCLE_BAD_SPRITE;
           }
           else
           {

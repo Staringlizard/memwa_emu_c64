@@ -64,13 +64,13 @@ typedef struct
   memory_type_t memory_type;
 } memory_config_t;
 
-static memory_config_t g_memory_config_a[2];
+static memory_config_t g_memory_config_p[2];
 memory_dd_t g_memory_dd;
 
 static void bus_dd_mem_conifig()
 {
-  g_memory_config_a[0].memory_p = g_memory_dd.all_p;
-  g_memory_config_a[0].memory_type = MEMORY_TYPE_READ_WRITE; /* Ok, not really true, but this is not needed anyway... */
+  g_memory_config_p[0].memory_p = g_memory_dd.all_p;
+  g_memory_config_p[0].memory_type = MEMORY_TYPE_READ_WRITE; /* Ok, not really true, but this is not needed anyway... */
 }
 
 void bus_dd_set_memory(uint8_t *mem_p, memory_bank_dd_t memory_bank)
@@ -127,7 +127,7 @@ uint8_t bus_dd_read_byte(uint16_t addr)
       return g_memory_dd.event_read_fpp[addr](addr);
     }
 
-    return g_memory_config_a[0].memory_p[addr];
+    return g_memory_config_p[0].memory_p[addr];
   }
   else
   {
@@ -146,7 +146,7 @@ void bus_dd_write_byte(uint16_t addr, uint8_t byte)
       return;
     }
 
-    g_memory_config_a[0].memory_p[addr] = byte;
+    g_memory_config_p[0].memory_p[addr] = byte;
   }
   else
   {
@@ -158,7 +158,7 @@ uint8_t *bus_dd_translate_emu_to_host_addr(uint16_t addr)
 {
   if(addr >= MEMORY_ALL && addr < (MEMORY_ALL + MEMORY_ALL_SIZE))
   {
-    return g_memory_config_a[0].memory_p + addr;
+    return g_memory_config_p[0].memory_p + addr;
   }
   else
   {

@@ -129,78 +129,78 @@ typedef struct
   memory_type_t memory_type;
 } memory_config_t;
 
-static memory_config_t g_memory_config_a[4];
+static memory_config_t g_memory_config_p[4];
 memory_t g_memory;
 
 void bus_mem_conifig(uint8_t mem_config)
 {
-  g_memory_config_a[0].memory_p = g_memory.ram_p;
-  g_memory_config_a[0].memory_type = MEMORY_TYPE_READ_WRITE;
+  g_memory_config_p[0].memory_p = g_memory.ram_p;
+  g_memory_config_p[0].memory_type = MEMORY_TYPE_READ_WRITE;
   switch(mem_config)
   {
     case MASK_MEMORY_CONFIG_0:
-      g_memory_config_a[1].memory_p = g_memory.ram_p;
-      g_memory_config_a[2].memory_p = g_memory.ram_p;
-      g_memory_config_a[3].memory_p = g_memory.ram_p;
-      g_memory_config_a[1].memory_type = MEMORY_TYPE_READ_WRITE;
-      g_memory_config_a[2].memory_type = MEMORY_TYPE_READ_WRITE;
-      g_memory_config_a[3].memory_type = MEMORY_TYPE_READ_WRITE;
+      g_memory_config_p[1].memory_p = g_memory.ram_p;
+      g_memory_config_p[2].memory_p = g_memory.ram_p;
+      g_memory_config_p[3].memory_p = g_memory.ram_p;
+      g_memory_config_p[1].memory_type = MEMORY_TYPE_READ_WRITE;
+      g_memory_config_p[2].memory_type = MEMORY_TYPE_READ_WRITE;
+      g_memory_config_p[3].memory_type = MEMORY_TYPE_READ_WRITE;
     break;
     case MASK_MEMORY_CONFIG_1:
-      g_memory_config_a[1].memory_p = g_memory.ram_p;
-      g_memory_config_a[2].memory_p = g_memory.crom_p;
-      g_memory_config_a[3].memory_p = g_memory.ram_p;
-      g_memory_config_a[1].memory_type = MEMORY_TYPE_READ_WRITE;
-      g_memory_config_a[2].memory_type = MEMORY_TYPE_READ_ONLY;
-      g_memory_config_a[3].memory_type = MEMORY_TYPE_READ_WRITE;
+      g_memory_config_p[1].memory_p = g_memory.ram_p;
+      g_memory_config_p[2].memory_p = g_memory.crom_p;
+      g_memory_config_p[3].memory_p = g_memory.ram_p;
+      g_memory_config_p[1].memory_type = MEMORY_TYPE_READ_WRITE;
+      g_memory_config_p[2].memory_type = MEMORY_TYPE_READ_ONLY;
+      g_memory_config_p[3].memory_type = MEMORY_TYPE_READ_WRITE;
     break;
     case MASK_MEMORY_CONFIG_2:
-      g_memory_config_a[1].memory_p = g_memory.ram_p;
-      g_memory_config_a[2].memory_p = g_memory.crom_p;
-      g_memory_config_a[3].memory_p = g_memory.krom_p;
-      g_memory_config_a[1].memory_type = MEMORY_TYPE_READ_WRITE;
-      g_memory_config_a[2].memory_type = MEMORY_TYPE_READ_ONLY;
-      g_memory_config_a[3].memory_type = MEMORY_TYPE_READ_ONLY;
+      g_memory_config_p[1].memory_p = g_memory.ram_p;
+      g_memory_config_p[2].memory_p = g_memory.crom_p;
+      g_memory_config_p[3].memory_p = g_memory.krom_p;
+      g_memory_config_p[1].memory_type = MEMORY_TYPE_READ_WRITE;
+      g_memory_config_p[2].memory_type = MEMORY_TYPE_READ_ONLY;
+      g_memory_config_p[3].memory_type = MEMORY_TYPE_READ_ONLY;
     break;
     case MASK_MEMORY_CONFIG_3:
-      g_memory_config_a[1].memory_p = g_memory.brom_p;
-      g_memory_config_a[2].memory_p = g_memory.crom_p;
-      g_memory_config_a[3].memory_p = g_memory.krom_p;
-      g_memory_config_a[1].memory_type = MEMORY_TYPE_READ_ONLY;
-      g_memory_config_a[2].memory_type = MEMORY_TYPE_READ_ONLY;
-      g_memory_config_a[3].memory_type = MEMORY_TYPE_READ_ONLY;
+      g_memory_config_p[1].memory_p = g_memory.brom_p;
+      g_memory_config_p[2].memory_p = g_memory.crom_p;
+      g_memory_config_p[3].memory_p = g_memory.krom_p;
+      g_memory_config_p[1].memory_type = MEMORY_TYPE_READ_ONLY;
+      g_memory_config_p[2].memory_type = MEMORY_TYPE_READ_ONLY;
+      g_memory_config_p[3].memory_type = MEMORY_TYPE_READ_ONLY;
     break;
     case MASK_MEMORY_CONFIG_4:
-      g_memory_config_a[1].memory_p = g_memory.ram_p;
-      g_memory_config_a[2].memory_p = g_memory.ram_p;
-      g_memory_config_a[3].memory_p = g_memory.ram_p;
-      g_memory_config_a[1].memory_type = MEMORY_TYPE_READ_WRITE;
-      g_memory_config_a[2].memory_type = MEMORY_TYPE_READ_WRITE;
-      g_memory_config_a[3].memory_type = MEMORY_TYPE_READ_WRITE;
+      g_memory_config_p[1].memory_p = g_memory.ram_p;
+      g_memory_config_p[2].memory_p = g_memory.ram_p;
+      g_memory_config_p[3].memory_p = g_memory.ram_p;
+      g_memory_config_p[1].memory_type = MEMORY_TYPE_READ_WRITE;
+      g_memory_config_p[2].memory_type = MEMORY_TYPE_READ_WRITE;
+      g_memory_config_p[3].memory_type = MEMORY_TYPE_READ_WRITE;
     break;
     case MASK_MEMORY_CONFIG_5:
-      g_memory_config_a[1].memory_p = g_memory.ram_p;
-      g_memory_config_a[2].memory_p = g_memory.io_p;
-      g_memory_config_a[3].memory_p = g_memory.ram_p;
-      g_memory_config_a[1].memory_type = MEMORY_TYPE_READ_WRITE;
-      g_memory_config_a[2].memory_type = MEMORY_TYPE_READ_WRITE;
-      g_memory_config_a[3].memory_type = MEMORY_TYPE_READ_WRITE;
+      g_memory_config_p[1].memory_p = g_memory.ram_p;
+      g_memory_config_p[2].memory_p = g_memory.io_p;
+      g_memory_config_p[3].memory_p = g_memory.ram_p;
+      g_memory_config_p[1].memory_type = MEMORY_TYPE_READ_WRITE;
+      g_memory_config_p[2].memory_type = MEMORY_TYPE_READ_WRITE;
+      g_memory_config_p[3].memory_type = MEMORY_TYPE_READ_WRITE;
     break;
     case MASK_MEMORY_CONFIG_6:
-      g_memory_config_a[1].memory_p = g_memory.ram_p;
-      g_memory_config_a[2].memory_p = g_memory.io_p;
-      g_memory_config_a[3].memory_p = g_memory.krom_p;
-      g_memory_config_a[1].memory_type = MEMORY_TYPE_READ_WRITE;
-      g_memory_config_a[2].memory_type = MEMORY_TYPE_READ_WRITE;
-      g_memory_config_a[3].memory_type = MEMORY_TYPE_READ_ONLY;
+      g_memory_config_p[1].memory_p = g_memory.ram_p;
+      g_memory_config_p[2].memory_p = g_memory.io_p;
+      g_memory_config_p[3].memory_p = g_memory.krom_p;
+      g_memory_config_p[1].memory_type = MEMORY_TYPE_READ_WRITE;
+      g_memory_config_p[2].memory_type = MEMORY_TYPE_READ_WRITE;
+      g_memory_config_p[3].memory_type = MEMORY_TYPE_READ_ONLY;
     break;
     case MASK_MEMORY_CONFIG_7:
-      g_memory_config_a[1].memory_p = g_memory.brom_p;
-      g_memory_config_a[2].memory_p = g_memory.io_p;
-      g_memory_config_a[3].memory_p = g_memory.krom_p;
-      g_memory_config_a[1].memory_type = MEMORY_TYPE_READ_ONLY;
-      g_memory_config_a[2].memory_type = MEMORY_TYPE_READ_WRITE;
-      g_memory_config_a[3].memory_type = MEMORY_TYPE_READ_ONLY;
+      g_memory_config_p[1].memory_p = g_memory.brom_p;
+      g_memory_config_p[2].memory_p = g_memory.io_p;
+      g_memory_config_p[3].memory_p = g_memory.krom_p;
+      g_memory_config_p[1].memory_type = MEMORY_TYPE_READ_ONLY;
+      g_memory_config_p[2].memory_type = MEMORY_TYPE_READ_WRITE;
+      g_memory_config_p[3].memory_type = MEMORY_TYPE_READ_ONLY;
     break;
   }
 }
@@ -274,19 +274,19 @@ uint8_t bus_read_byte(uint16_t addr)
       /* If subscribed, then bus takes no responsibility for this address */
       return g_memory.event_read_fpp[addr](addr);
     }
-    return g_memory_config_a[0].memory_p[addr];
+    return g_memory_config_p[0].memory_p[addr];
   }
   else if(addr >= 0xA000 && addr < 0xC000)
   {
-    return g_memory_config_a[1].memory_p[addr];
+    return g_memory_config_p[1].memory_p[addr];
   }
   else if(addr >= 0xC000 && addr < 0xD000)
   {
-    return g_memory_config_a[0].memory_p[addr];
+    return g_memory_config_p[0].memory_p[addr];
   }
   else if(addr >= 0xD000 && addr < 0xE000)
   {
-    if(g_memory_config_a[2].memory_p == g_memory.io_p)
+    if(g_memory_config_p[2].memory_p == g_memory.io_p)
     {
       /*
        * Some areas in io memory are not mapped, therefore any address
@@ -316,11 +316,11 @@ uint8_t bus_read_byte(uint16_t addr)
       }
     }
 
-    return g_memory_config_a[2].memory_p[addr];
+    return g_memory_config_p[2].memory_p[addr];
   }
   else if(addr >= 0xE000 && addr <= 0xFFFF)
   {
-    return g_memory_config_a[3].memory_p[addr];
+    return g_memory_config_p[3].memory_p[addr];
   }
   else
   {
@@ -339,29 +339,29 @@ void bus_write_byte(uint16_t addr, uint8_t byte)
       return;
     }
     
-    g_memory_config_a[0].memory_p[addr] = byte;
+    g_memory_config_p[0].memory_p[addr] = byte;
   }
   else if(addr >= 0xA000 && addr < 0xC000)
   {
-    if(g_memory_config_a[1].memory_type == MEMORY_TYPE_READ_WRITE)
+    if(g_memory_config_p[1].memory_type == MEMORY_TYPE_READ_WRITE)
     {
-      g_memory_config_a[1].memory_p[addr] = byte;
+      g_memory_config_p[1].memory_p[addr] = byte;
     }
     else
     {
       /* If trying to write to rom, then ram will be updated instead */
-      g_memory_config_a[0].memory_p[addr] = byte;
+      g_memory_config_p[0].memory_p[addr] = byte;
     }
   }
   else if(addr >= 0xC000 && addr < 0xD000)
   {
-    g_memory_config_a[0].memory_p[addr] = byte;
+    g_memory_config_p[0].memory_p[addr] = byte;
   }
   else if(addr >= 0xD000 && addr < 0xE000)
   {
-    if(g_memory_config_a[2].memory_type == MEMORY_TYPE_READ_WRITE)
+    if(g_memory_config_p[2].memory_type == MEMORY_TYPE_READ_WRITE)
     {
-      if(g_memory_config_a[2].memory_p == g_memory.io_p)
+      if(g_memory_config_p[2].memory_p == g_memory.io_p)
       {
         /*
          * Some areas in io memory are not mapped, therefore any address
@@ -392,24 +392,24 @@ void bus_write_byte(uint16_t addr, uint8_t byte)
         }
       }
 
-      g_memory_config_a[2].memory_p[addr] = byte;
+      g_memory_config_p[2].memory_p[addr] = byte;
     }
     else
     {
       /* If trying to write to rom, then ram will be updated instead */
-      g_memory_config_a[0].memory_p[addr] = byte;
+      g_memory_config_p[0].memory_p[addr] = byte;
     }
   }
   else if(addr >= 0xE000 && addr <= 0xFFFF)
   {
-    if(g_memory_config_a[3].memory_type == MEMORY_TYPE_READ_WRITE)
+    if(g_memory_config_p[3].memory_type == MEMORY_TYPE_READ_WRITE)
     {
-      g_memory_config_a[3].memory_p[addr] = byte;
+      g_memory_config_p[3].memory_p[addr] = byte;
     }
     else
     {
       /* If trying to write to rom, then ram will be updated instead */
-      g_memory_config_a[0].memory_p[addr] = byte;
+      g_memory_config_p[0].memory_p[addr] = byte;
     }
   }
 }
@@ -418,28 +418,28 @@ uint8_t *bus_translate_emu_to_host_addr(uint16_t addr)
 {
   if(addr >= 0 && addr < 0xA000)
   {
-    return g_memory_config_a[0].memory_p + addr;
+    return g_memory_config_p[0].memory_p + addr;
   }
   else if(addr >= 0xA000 && addr < 0xC000)
   {
-    return g_memory_config_a[1].memory_p + addr;
+    return g_memory_config_p[1].memory_p + addr;
   }
   else if(addr >= 0xC000 && addr < 0xD000)
   {
-    return g_memory_config_a[0].memory_p + addr;
+    return g_memory_config_p[0].memory_p + addr;
   }
   else if(addr >= 0xD000 && addr < 0xE000)
   {
-    return g_memory_config_a[2].memory_p + addr;
+    return g_memory_config_p[2].memory_p + addr;
   }
   else if(addr >= 0xE000 && addr <= 0xFFFF)
   {
-    return g_memory_config_a[3].memory_p + addr;
+    return g_memory_config_p[3].memory_p + addr;
   }
   else
   {
     assert(0);
   }
 
-  return g_memory_config_a[3].memory_p + addr;
+  return g_memory_config_p[3].memory_p + addr;
 }

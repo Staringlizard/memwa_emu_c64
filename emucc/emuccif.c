@@ -47,7 +47,7 @@ void if_emu_cc_display_limit_frame_rate(uint8_t active);
 void if_emu_cc_display_lock_frame_rate(uint8_t active);
 void if_emu_cc_mem_set(uint8_t *mem_p, if_mem_cc_type_t mem_type);
 void if_emu_cc_op_init();
-void if_emu_cc_op_run(int32_t cycles);
+void if_emu_cc_op_run(uint32_t cycles);
 void if_emu_cc_op_reset();
 void if_emu_cc_tape_drive_load(uint32_t *fd_p);
 void if_emu_cc_tape_drive_play();
@@ -167,7 +167,7 @@ void if_emu_cc_op_init()
   cpu_init();
 }
 
-void if_emu_cc_op_run(int32_t cycles)
+void if_emu_cc_op_run(uint32_t cycles)
 {
   uint32_t cc = 0;
 
