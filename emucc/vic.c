@@ -60,7 +60,7 @@
 #endif
 
 #define NO_OF_FRAMES_STATS      50
-#define NO_OF_FRAMES_LOCK       2
+#define MS_PER_FRAME            20
 #define SPRITE_NONE             0xFF
 #define SPRITE_MAP_NONE         0x00
 #define SPRITE_WIDTH            24
@@ -289,8 +289,8 @@ extern if_host_t g_if_host; /* Main interface */
 
 static uint8_t *g_layer_addr_p; /* Memory pointer used to draw pixels with */
 static uint8_t *g_layer_addr_start_p; /* Start addr for graphic memory */
-static uint8_t *g_sprite_layer_addr_aap[VIC_MEM_MAX]; /* Memory to keep track of sprites */
-static uint8_t *g_sprite_layer_addr_start_aap[VIC_MEM_MAX]; /* Memory to keep track of sprites */
+static uint8_t *g_sprite_layer_addr_pp[VIC_MEM_MAX]; /* Memory to keep track of sprites */
+static uint8_t *g_sprite_layer_addr_start_pp[VIC_MEM_MAX]; /* Memory to keep track of sprites */
 
 static uint8_t *g_pixel_sprite_mapping_p; /* Tracking which pixel is drawn by witch sprite */
 static uint8_t *g_pixel_sprite_mapping_start_p; /* Tracking which pixel is drawn by witch sprite */
@@ -320,10 +320,9 @@ static uint8_t g_display_frame; /* Hold every second frame (graphics fg and bg) 
 static uint8_t g_char_pointers_p[41]; /* Char pointers are loaded when bad line occurs */
 
 static uint32_t g_sprite_present_on_current_line;
-static uint32_t g_fps_saved_time;
+static uint32_t g_ts_fps_prev;
 static uint32_t g_fps_stats_time;
 static uint32_t g_frames_until_stats;
-static uint32_t g_frames_until_lock;
 static uint32_t g_raster_line_irq;
 static uint32_t g_sprite_multi_color_0;
 static uint32_t g_sprite_multi_color_1;
@@ -1172,8 +1171,8 @@ static void erase_sprite(uint32_t sprite, uint32_t at_x, uint32_t at_y)
 {
   uint32_t x;
   uint32_t y;
-  uint8_t *fg_sprite_p = g_sprite_layer_addr_start_aap[VIC_MEM_SPRITE_FORGROUND];
-  uint8_t *bg_sprite_p = g_sprite_layer_addr_start_aap[VIC_MEM_SPRITE_BACKGROUND];
+  uint8_t *fg_sprite_p = g_sprite_layer_addr_start_pp[VIC_MEM_SPRITE_FORGROUND];
+  uint8_t *bg_sprite_p = g_sprite_layer_addr_start_pp[VIC_MEM_SPRITE_BACKGROUND];
   uint8_t *map_p = g_pixel_sprite_mapping_start_p;
   uint8_t y_exp_factor = g_sprites_p[sprite].y_exp_factor;
   uint8_t x_exp_factor = g_sprites_p[sprite].x_exp_factor;
@@ -1315,8 +1314,8 @@ static void draw_sprite(uint32_t sprite, uint32_t at_x, uint32_t at_y)
 {
   uint32_t x;
   uint32_t y;
-  uint8_t *fg_sprite_p = g_sprite_layer_addr_start_aap[VIC_MEM_SPRITE_FORGROUND];
-  uint8_t *bg_sprite_p = g_sprite_layer_addr_start_aap[VIC_MEM_SPRITE_BACKGROUND];
+  uint8_t *fg_sprite_p = g_sprite_layer_addr_start_pp[VIC_MEM_SPRITE_FORGROUND];
+  uint8_t *bg_sprite_p = g_sprite_layer_addr_start_pp[VIC_MEM_SPRITE_BACKGROUND];
   uint8_t *map_p = g_pixel_sprite_mapping_start_p;
   uint8_t *pixel_p;
   uint8_t y_exp_factor = g_sprites_p[sprite].y_exp_factor;
@@ -1717,7 +1716,7 @@ static void new_text_line()
 
 static void new_frame()
 {
-  uint32_t fps_time;
+  uint32_t ts_fps_current;
 
   if(g_display_frame) /* Only flip buffer if it was actually used */
   {
@@ -1727,26 +1726,21 @@ static void new_frame()
 
   if(g_lock_frame_rate)
   {
-    if(g_frames_until_lock == 0)
+    /* One frame should take 20ms for PAL */
+    do
     {
-      /* One frame should take 20ms for PAL */
-      do
-      {
-        fps_time = g_if_host.if_host_time.time_get_ms_fp();
-      } while((fps_time - g_fps_saved_time) < NO_OF_FRAMES_LOCK * 20);
+      ts_fps_current = g_if_host.if_host_time.time_get_ms_fp();
+    } while((ts_fps_current - g_ts_fps_prev) < MS_PER_FRAME);
 
-      g_frames_until_lock = NO_OF_FRAMES_LOCK;
-      g_fps_saved_time = fps_time;
-    }
-    g_frames_until_lock--;
+    g_ts_fps_prev = ts_fps_current;
   }
 
   if(g_frames_until_stats == 0)
   {
-    fps_time = g_if_host.if_host_time.time_get_ms_fp();
-    g_if_host.if_host_stats.stats_fps_fp(calc_fps(fps_time, g_fps_stats_time));
+    ts_fps_current = g_if_host.if_host_time.time_get_ms_fp();
+    g_if_host.if_host_stats.stats_fps_fp(calc_fps(ts_fps_current, g_fps_stats_time));
     g_frames_until_stats = NO_OF_FRAMES_STATS;
-    g_fps_stats_time = fps_time;
+    g_fps_stats_time = ts_fps_current;
   }
   g_frames_until_stats--;
 }
@@ -1792,10 +1786,10 @@ static inline void output_pixel_STM()
     if(*g_pixel_sprite_mapping_p)
     {
       /* Check if fg sprite exist */
-      sprite_fg_pixel1 = *g_sprite_layer_addr_aap[VIC_MEM_SPRITE_FORGROUND]++;
+      sprite_fg_pixel1 = *g_sprite_layer_addr_pp[VIC_MEM_SPRITE_FORGROUND]++;
 
       /* Also check for bg sprite */
-      sprite_bg_pixel1 = *g_sprite_layer_addr_aap[VIC_MEM_SPRITE_BACKGROUND]++;
+      sprite_bg_pixel1 = *g_sprite_layer_addr_pp[VIC_MEM_SPRITE_BACKGROUND]++;
 
       /* If fg sprite pixel exist, then it will be visible */
       if(sprite_fg_pixel1 != SPRITE_NONE)
@@ -1816,8 +1810,8 @@ static inline void output_pixel_STM()
     }
     else
     {
-      g_sprite_layer_addr_aap[VIC_MEM_SPRITE_FORGROUND]++;
-      g_sprite_layer_addr_aap[VIC_MEM_SPRITE_BACKGROUND]++;
+      g_sprite_layer_addr_pp[VIC_MEM_SPRITE_FORGROUND]++;
+      g_sprite_layer_addr_pp[VIC_MEM_SPRITE_BACKGROUND]++;
     }
   }
 
@@ -1871,8 +1865,8 @@ static inline void output_pixel_ECM()
   {
     if(*g_pixel_sprite_mapping_p)
     {
-      sprite_fg_pixel1 = *g_sprite_layer_addr_aap[VIC_MEM_SPRITE_FORGROUND]++;
-      sprite_bg_pixel1 = *g_sprite_layer_addr_aap[VIC_MEM_SPRITE_BACKGROUND]++;
+      sprite_fg_pixel1 = *g_sprite_layer_addr_pp[VIC_MEM_SPRITE_FORGROUND]++;
+      sprite_bg_pixel1 = *g_sprite_layer_addr_pp[VIC_MEM_SPRITE_BACKGROUND]++;
 
       if(sprite_fg_pixel1 != SPRITE_NONE)
       {
@@ -1890,8 +1884,8 @@ static inline void output_pixel_ECM()
     }
     else
     {
-      g_sprite_layer_addr_aap[VIC_MEM_SPRITE_FORGROUND]++;
-      g_sprite_layer_addr_aap[VIC_MEM_SPRITE_BACKGROUND]++;
+      g_sprite_layer_addr_pp[VIC_MEM_SPRITE_FORGROUND]++;
+      g_sprite_layer_addr_pp[VIC_MEM_SPRITE_BACKGROUND]++;
     }
   }
 
@@ -1946,8 +1940,8 @@ static inline void output_pixel_MTM()
     {
       if(*g_pixel_sprite_mapping_p)
       {
-        sprite_fg_pixel1 = *g_sprite_layer_addr_aap[VIC_MEM_SPRITE_FORGROUND]++;
-        sprite_bg_pixel1 = *g_sprite_layer_addr_aap[VIC_MEM_SPRITE_BACKGROUND]++;
+        sprite_fg_pixel1 = *g_sprite_layer_addr_pp[VIC_MEM_SPRITE_FORGROUND]++;
+        sprite_bg_pixel1 = *g_sprite_layer_addr_pp[VIC_MEM_SPRITE_BACKGROUND]++;
 
         if(sprite_fg_pixel1 != SPRITE_NONE)
         {
@@ -1965,8 +1959,8 @@ static inline void output_pixel_MTM()
       }
       else
       {
-        g_sprite_layer_addr_aap[VIC_MEM_SPRITE_FORGROUND]++;
-        g_sprite_layer_addr_aap[VIC_MEM_SPRITE_BACKGROUND]++;
+        g_sprite_layer_addr_pp[VIC_MEM_SPRITE_FORGROUND]++;
+        g_sprite_layer_addr_pp[VIC_MEM_SPRITE_BACKGROUND]++;
       }
     }
 
@@ -1996,8 +1990,8 @@ static inline void output_pixel_MTM()
     {
       if(*g_pixel_sprite_mapping_p)
       {
-        sprite_fg_pixel1 = *g_sprite_layer_addr_aap[VIC_MEM_SPRITE_FORGROUND]++;
-        sprite_bg_pixel1 = *g_sprite_layer_addr_aap[VIC_MEM_SPRITE_BACKGROUND]++;
+        sprite_fg_pixel1 = *g_sprite_layer_addr_pp[VIC_MEM_SPRITE_FORGROUND]++;
+        sprite_bg_pixel1 = *g_sprite_layer_addr_pp[VIC_MEM_SPRITE_BACKGROUND]++;
 
         if(sprite_fg_pixel1 != SPRITE_NONE)
         {
@@ -2015,8 +2009,8 @@ static inline void output_pixel_MTM()
       }
       else
       {
-        g_sprite_layer_addr_aap[VIC_MEM_SPRITE_FORGROUND]++;
-        g_sprite_layer_addr_aap[VIC_MEM_SPRITE_BACKGROUND]++;
+        g_sprite_layer_addr_pp[VIC_MEM_SPRITE_FORGROUND]++;
+        g_sprite_layer_addr_pp[VIC_MEM_SPRITE_BACKGROUND]++;
       }
     }
 
@@ -2053,8 +2047,8 @@ static inline void output_pixel_SBM()
   {
     if(*g_pixel_sprite_mapping_p)
     {
-      sprite_fg_pixel1 = *g_sprite_layer_addr_aap[VIC_MEM_SPRITE_FORGROUND]++;
-      sprite_bg_pixel1 = *g_sprite_layer_addr_aap[VIC_MEM_SPRITE_BACKGROUND]++;
+      sprite_fg_pixel1 = *g_sprite_layer_addr_pp[VIC_MEM_SPRITE_FORGROUND]++;
+      sprite_bg_pixel1 = *g_sprite_layer_addr_pp[VIC_MEM_SPRITE_BACKGROUND]++;
 
       if(sprite_fg_pixel1 != SPRITE_NONE)
       {
@@ -2072,8 +2066,8 @@ static inline void output_pixel_SBM()
     }
     else
     {
-      g_sprite_layer_addr_aap[VIC_MEM_SPRITE_FORGROUND]++;
-      g_sprite_layer_addr_aap[VIC_MEM_SPRITE_BACKGROUND]++;
+      g_sprite_layer_addr_pp[VIC_MEM_SPRITE_FORGROUND]++;
+      g_sprite_layer_addr_pp[VIC_MEM_SPRITE_BACKGROUND]++;
     }
   }
 
@@ -2125,8 +2119,8 @@ static inline void output_pixel_MBM()
   {
     if(*g_pixel_sprite_mapping_p)
     {
-      sprite_fg_pixel1 = *g_sprite_layer_addr_aap[VIC_MEM_SPRITE_FORGROUND]++;
-      sprite_bg_pixel1 = *g_sprite_layer_addr_aap[VIC_MEM_SPRITE_BACKGROUND]++;
+      sprite_fg_pixel1 = *g_sprite_layer_addr_pp[VIC_MEM_SPRITE_FORGROUND]++;
+      sprite_bg_pixel1 = *g_sprite_layer_addr_pp[VIC_MEM_SPRITE_BACKGROUND]++;
 
       if(sprite_fg_pixel1 != SPRITE_NONE)
       {
@@ -2144,8 +2138,8 @@ static inline void output_pixel_MBM()
     }
     else
     {
-      g_sprite_layer_addr_aap[VIC_MEM_SPRITE_FORGROUND]++;
-      g_sprite_layer_addr_aap[VIC_MEM_SPRITE_BACKGROUND]++;
+      g_sprite_layer_addr_pp[VIC_MEM_SPRITE_FORGROUND]++;
+      g_sprite_layer_addr_pp[VIC_MEM_SPRITE_BACKGROUND]++;
     }
   }
 
@@ -2170,8 +2164,8 @@ static inline void output_pixel_BORDER_EXT()
    */
   if(g_sprite_present_on_current_line)
   {
-    g_sprite_layer_addr_aap[VIC_MEM_SPRITE_FORGROUND]++;
-    g_sprite_layer_addr_aap[VIC_MEM_SPRITE_BACKGROUND]++;
+    g_sprite_layer_addr_pp[VIC_MEM_SPRITE_FORGROUND]++;
+    g_sprite_layer_addr_pp[VIC_MEM_SPRITE_BACKGROUND]++;
   }
 
   *g_layer_addr_p++ = color;
@@ -2202,8 +2196,8 @@ static inline void output_pixel_BAD()
 
   if(g_sprite_present_on_current_line)
   {
-    g_sprite_layer_addr_aap[VIC_MEM_SPRITE_FORGROUND]++;
-    g_sprite_layer_addr_aap[VIC_MEM_SPRITE_BACKGROUND]++;
+    g_sprite_layer_addr_pp[VIC_MEM_SPRITE_FORGROUND]++;
+    g_sprite_layer_addr_pp[VIC_MEM_SPRITE_BACKGROUND]++;
   }
 
   *g_layer_addr_p++ = color;
@@ -2243,19 +2237,18 @@ void vic_init()
   g_ucycles_in_queue = 0;
   g_graphic_mode = GRAPHIC_MODE_STM;
   g_frames_until_stats = NO_OF_FRAMES_STATS;
-  g_frames_until_lock = NO_OF_FRAMES_LOCK;
   g_x_scroll = 0;
   g_y_scroll = 3;
 
   /* Clear sprite memory */
   for(i = 0; i < LINE_MAX * PIXELS_MAX; i++)
   {
-    *(g_sprite_layer_addr_aap[VIC_MEM_SPRITE_BACKGROUND] + i) = SPRITE_NONE;
+    *(g_sprite_layer_addr_pp[VIC_MEM_SPRITE_BACKGROUND] + i) = SPRITE_NONE;
   }
 
   for(i = 0; i < LINE_MAX * PIXELS_MAX; i++)
   {
-    *(g_sprite_layer_addr_aap[VIC_MEM_SPRITE_FORGROUND] + i) = SPRITE_NONE;
+    *(g_sprite_layer_addr_pp[VIC_MEM_SPRITE_FORGROUND] + i) = SPRITE_NONE;
   }
 
   /* Subscribe for bus write events */
@@ -2367,8 +2360,8 @@ void vic_set_memory(uint8_t *mem_addr_p, vic_mem_sprite_t vic_mem_sprite)
   {
     case VIC_MEM_SPRITE_BACKGROUND:
     case VIC_MEM_SPRITE_FORGROUND:
-      g_sprite_layer_addr_aap[vic_mem_sprite] = mem_addr_p;
-      g_sprite_layer_addr_start_aap[vic_mem_sprite] = mem_addr_p;
+      g_sprite_layer_addr_pp[vic_mem_sprite] = mem_addr_p;
+      g_sprite_layer_addr_start_pp[vic_mem_sprite] = mem_addr_p;
       break;
     case VIC_MEM_SPRITE_MAP:
       g_pixel_sprite_mapping_p = (uint8_t *)mem_addr_p;
@@ -2481,11 +2474,11 @@ GO_AGAIN:
 
           /* Set the sprite layer so that it points to the very first pixel in display window */
           /* TODO: change when supporting sprites on whole screen */
-          g_sprite_layer_addr_aap[VIC_MEM_SPRITE_FORGROUND] = g_sprite_layer_addr_start_aap[VIC_MEM_SPRITE_FORGROUND] +
+          g_sprite_layer_addr_pp[VIC_MEM_SPRITE_FORGROUND] = g_sprite_layer_addr_start_pp[VIC_MEM_SPRITE_FORGROUND] +
                                                            LINE_DISP_WIND_START * PIXELS_MAX +
                                                            PIXEL_DISP_WIND_START;
 
-          g_sprite_layer_addr_aap[VIC_MEM_SPRITE_BACKGROUND] = g_sprite_layer_addr_start_aap[VIC_MEM_SPRITE_BACKGROUND] +
+          g_sprite_layer_addr_pp[VIC_MEM_SPRITE_BACKGROUND] = g_sprite_layer_addr_start_pp[VIC_MEM_SPRITE_BACKGROUND] +
                                                            LINE_DISP_WIND_START * PIXELS_MAX +
                                                            PIXEL_DISP_WIND_START;
           g_pixel_sprite_mapping_p = g_pixel_sprite_mapping_start_p + LINE_DISP_WIND_START * PIXELS_MAX + PIXEL_DISP_WIND_START;
@@ -2915,11 +2908,11 @@ GO_AGAIN:
 #endif
 
             /* Set the sprite layer so that it points to the very first pixel for the current line in display window */
-            g_sprite_layer_addr_aap[VIC_MEM_SPRITE_FORGROUND] = g_sprite_layer_addr_start_aap[VIC_MEM_SPRITE_FORGROUND] +
+            g_sprite_layer_addr_pp[VIC_MEM_SPRITE_FORGROUND] = g_sprite_layer_addr_start_pp[VIC_MEM_SPRITE_FORGROUND] +
                                                              g_screen_line_cnt * PIXELS_MAX +
                                                              PIXEL_DISP_WIND_START;
 
-            g_sprite_layer_addr_aap[VIC_MEM_SPRITE_BACKGROUND] = g_sprite_layer_addr_start_aap[VIC_MEM_SPRITE_BACKGROUND] +
+            g_sprite_layer_addr_pp[VIC_MEM_SPRITE_BACKGROUND] = g_sprite_layer_addr_start_pp[VIC_MEM_SPRITE_BACKGROUND] +
                                                              g_screen_line_cnt * PIXELS_MAX +
                                                              PIXEL_DISP_WIND_START;
 
